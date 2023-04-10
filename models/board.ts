@@ -10,34 +10,45 @@ const boardSchema = new Schema({
         required: false
     },
     title: {
-        types: String,
+        type: String,
         required: true
     },
     visibilityTypeId: {
-        types: SchemaTypes.ObjectId,
+        type: SchemaTypes.ObjectId,
         ref: 'VisibilityType',
         required: true
     },
-    membersOfBoard: [
+    users: [
         {
             userId: {
-                types: SchemaTypes.ObjectId,
+                type: SchemaTypes.ObjectId,
                 ref: 'User',
-                required: true
-            },
-            numberOfMember: {
-                types: Number,
                 required: true
             }
         }
-    ]
-    // products: [
-    //     {
-    //         productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-    //         quantity: { type: Number, required: true }
-    //     }
-    // ],
-    // userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    ],
+    lists: [
+        {
+            list: {
+                type: SchemaTypes.ObjectId,
+                ref: 'List',
+                required: true
+            }
+        }
+    ],
+    typeOfVisibility: {
+        type: SchemaTypes.ObjectId,
+        ref: 'TypesOfVisibility',
+        required: true
+    },
+    description: {
+        type: String
+    },
+    ownerOfBoard: {
+        type: SchemaTypes.ObjectId,
+        ref: 'User',
+        required: true
+    }
 })
 
 module.exports = new Model('Board', boardSchema);
