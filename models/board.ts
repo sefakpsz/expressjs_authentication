@@ -36,11 +36,6 @@ const boardSchema = new Schema({
             }
         }
     ],
-    typeOfVisibility: {
-        type: SchemaTypes.ObjectId,
-        ref: 'TypesOfVisibility',
-        required: true
-    },
     description: {
         type: String
     },
