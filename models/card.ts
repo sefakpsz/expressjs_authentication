@@ -10,6 +10,11 @@ const cardSchema = new Schema({
         ref: 'List',
         required: true
     },
+    boardId: {
+        type: SchemaTypes.ObjectId,
+        ref: 'Board',
+        required: true
+    },
     color: {
         type: String,
         required: false

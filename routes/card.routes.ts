@@ -1,5 +1,16 @@
 import { Router } from 'express';
 
-import { deletingComment, downloadingAttachedFile, removingAttachedFile, editingComment, changingCover } from '../controllers/card.controller';
+import {
+    addingComment,
+    deletingComment,
+    editingComment,
+    downloadingAttachedFile,
+    removingAttachedFile,
+    changingCover,
+    changingListOfCard,
+    addingCard,
+    deletingCard,
+    updatingCard
+} from '../controllers/card.controller';
 
 export default Router;

@@ -1,24 +1,24 @@
 import { Schema, Model, SchemaTypes } from 'mongoose';
 
 const boardSchema = new Schema({
-    status: {
-        type: Boolean,
+    title: {
+        type: String,
         required: true
+    },
+    description: {
+        type: String,
+        required: false
     },
     coverImage: {
         type: String,
         required: false
-    },
-    title: {
-        type: String,
-        required: true
     },
     visibilityTypeId: {
         type: SchemaTypes.ObjectId,
         ref: 'VisibilityType',
         required: true
     },
-    users: [
+    members: [
         {
             userId: {
                 type: SchemaTypes.ObjectId,
@@ -27,19 +27,16 @@ const boardSchema = new Schema({
             }
         }
     ],
-    lists: [
+    groups: [
         {
-            list: {
+            group: {
                 type: SchemaTypes.ObjectId,
-                ref: 'List',
+                ref: 'Group',
                 required: true
             }
         }
     ],
-    description: {
-        type: String
-    },
-    ownerOfBoard: {
+    owner: {
         type: SchemaTypes.ObjectId,
         ref: 'User',
         required: true

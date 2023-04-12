@@ -1,6 +1,6 @@
 import { SchemaTypes, Schema, Model } from "mongoose";
 
-const listSchema = new Schema({
+const groupSchema = new Schema({
     title: {
         type: String,
         required: true
@@ -25,4 +25,4 @@ const listSchema = new Schema({
     ]
 })
 
-module.exports = new Model('List', listSchema);
+module.exports = new Model('Group', groupSchema);
