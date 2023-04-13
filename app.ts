@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { validationError, notFoundError } from './middlewares/error.middleware';
+
 import auth from './routes/auth.routes'
 import board from './routes/board.routes'
 import card from './routes/card.routes'
@@ -16,8 +18,11 @@ app.use('/board', board);
 app.use('/card', card);
 app.use('/group', group);
 
-app.listen(1907, async () => {
-    await mongoose.connect("mongodb+srv://sefakpsz:paOy6AywARUAsOS1@cluster0.y4mw8zp.mongodb.net/BaseDb?retryWrites=true&w=majority")
+app.use(validationError);
+app.use(notFoundError);
+
+app.listen(process.env.port, async () => {
+    await mongoose.connect(`${process.env.mongoConnectionString}`)
         .then(() => {
             console.log(`Connected to MongoDb!\nhttp://127.0.0.1:${process.env.port} is listening...`)
         })
