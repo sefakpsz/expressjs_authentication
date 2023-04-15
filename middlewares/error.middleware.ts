@@ -11,7 +11,7 @@ export const notFoundError = (error: any, req: Request, res: Response, next: Nex
 
 export const validationError = (err: any, req: Request, res: Response, next: NextFunction) => {
     if (err) {
-        return res.json({
+        return res.status(400).json({
             error: err.error.toString()
         });
     }

@@ -1,7 +1,7 @@
 import { createValidator } from 'express-joi-validation';
 import Joi from 'joi';
 
-export const validator = createValidator({ passError: true });
+export const validator = createValidator({ passError: false });
 
 const passwordRules = (value: string, helpers: any) => {
     // write your own password rules and add as below example
