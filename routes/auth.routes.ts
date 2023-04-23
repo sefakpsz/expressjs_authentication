@@ -6,14 +6,15 @@ import { validator, Register, Login, PasswordChange, PasswordReset } from '../va
 
 const router = Router();
 
-router.post('/register', validator.body(Register), register);
+//ASK OSMAN TO USAGE OF BODY INSTEAD OF QUERY
+router.post('/register', validator.query(Register), register);
 
 router.get('/login', validator.query(Login), login);
 
 router.post('/logout', logout);
 
-router.post('/passwordChange', validator.body(PasswordChange), passwordChange);
+router.post('/passwordChange', validator.query(PasswordChange), passwordChange);
 
-router.post('/passwordReset', validator.body(PasswordReset), passwordReset);
+router.post('/passwordReset', validator.query(PasswordReset), passwordReset);
 
 export default router;
