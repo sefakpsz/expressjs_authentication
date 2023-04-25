@@ -3,11 +3,23 @@ import { sendMail } from '../utils/providers/mail/config';
 import { errorDataResult, successDataResult, successResult, errorResult } from '../utils/constants/results'
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
-    // get email and password and these are correct send mail and authenticate
+
+    /*
+    get mail and password
+    firstly check is there any mail in db
+        if there isn't send error message
+    then check password
+        if password is wrong send error message
+    then if all of them is true send mail to securityCode
+    */
 }
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
-    //there should be a expire prop in db and for logouting go to db and make expire boolean true
+
+    /*
+    via token go to user's token info and make expire prop to true and write current datetime to updatedAt
+     */
+
 }
 
 export const register = (req: Request, res: Response, next: NextFunction) => {
@@ -38,6 +50,10 @@ export const passwordChange = (req: Request, res: Response, next: NextFunction) 
 }
 
 export const passwordReset = (req: Request, res: Response, next: NextFunction) => {
-    // get only email and send mail after authentication change password
-    // but don't allow to get in after all go to login page again
+
+    /*
+    get mail of user
+    send mailCode to user via e-mail and authorize to user and via that code 
+    */
+
 }
