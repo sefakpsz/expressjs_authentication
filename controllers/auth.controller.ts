@@ -46,14 +46,15 @@ export const securityControl = (req: Request, res: Response, next: NextFunction)
 }
 
 export const passwordChange = (req: Request, res: Response, next: NextFunction) => {
-    // get email old&new password then authenticate from mail ands change password
+    // enter email code, token, old&new password then and change password
 }
 
 export const passwordReset = (req: Request, res: Response, next: NextFunction) => {
 
     /*
     get mail of user
-    send mailCode to user via e-mail and authorize to user and via that code 
+    send mailCode to user via e-mail authorize to user
+    and then with mail code, email and password reset to password
     */
 
 }
