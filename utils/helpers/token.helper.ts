@@ -1,3 +1,5 @@
+import { jwt } from 'jsonwebtoken'
+
 const createToken = (email: string, name: string, surname: string) => {
     /*
     option one
@@ -6,7 +8,15 @@ const createToken = (email: string, name: string, surname: string) => {
     */
 
 
+    const token = jwt.sign(
+        { email, name, surname },
+        process.env.tokenKey,
+        {
+            expiresIn: "2h",
+        }
+    );
 
+    return token;
 
     /* 
     option two

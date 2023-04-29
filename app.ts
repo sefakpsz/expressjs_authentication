@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { validationError, notFoundError } from './middlewares/error.middleware';
+import { verifyToken } from './middlewares/auth.middleware';
 
 import auth from './routes/auth.routes'
 import board from './routes/board.routes'
@@ -20,6 +21,7 @@ app.use('/group', group);
 
 app.use(validationError);
 app.use(notFoundError);
+app.use(verifyToken);
 
 app.listen(process.env.port, async () => {
     await mongoose.connect(`${process.env.mongoConnectionString}`)
