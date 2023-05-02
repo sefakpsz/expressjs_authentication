@@ -1,84 +1,44 @@
-import { jwt } from 'jsonwebtoken'
+import { sign, verify } from 'jsonwebtoken'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
 
-// const createToken = (email: string, name: string, surname: string) => {
-//     /*
-//     option one
-//      use JWT
-//      for now use classic way to using jwt; after talked to big brother Arda we'll see..
-//     */
+const tokenKey = Buffer.from(process.env.tokenKey as string, 'hex');
+const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex');
+const iv = Buffer.from(process.env.iv as string, 'hex');
 
-//     const payload = { email, name, surname };
+const createToken = (email: string, userId: number) => {
+    const payload = { email, userId };
 
-//     let iv = randomBytes(16);
-//     let key = process.env.payloadKey as string;
+    const cipher = createCipheriv('aes256', payloadKey, iv);
+    const encryptedPayload = cipher.update(JSON.stringify(payload), 'utf8', 'hex') + cipher.final('hex');
 
-//     let cipher = createCipheriv('aes-256-ocb', Buffer.from(key), iv);
-//     let encrypted = cipher.update(JSON.stringify(payload));
-//     encrypted = Buffer.concat([encrypted, cipher.final()]);
+    const token = sign(
+        encryptedPayload,
+        tokenKey,
+        {
+            expiresIn: "3d",
+        }
+    );
 
-//     const token = jwt.sign(
-//         {
-//             iv: iv.toString('hex'),
-//             encrypted: encrypted.toString('hex')
-//         },
-//         process.env.tokenKey,
-//         {
-//             expiresIn: "2h",
-//         }
-//     );
+    return token;
 
-//     return token;
+    /* 
+    hash option
+     use a hash function in here and use provided strings as hash and remember to salt them with 'hashFunction'.key()
+     emailMSKnameMSKsurname,Date.now()
+    */
+}
 
-//     /* 
-//     option two
-//      use a hash function in here and use provided strings as hash and remember to salt them with 'hashFunction'.key()
-//      emailMSKnameMSKsurname,Date.now()
-//     */
-// }
+const verifyToken = (token: string) => {
 
-//const encrypt = (email: "email", name: "name", surname: "surname") => {
-const payload = { email: "email", name: "name", surname: "surname" };
+    try {
+        const decodedToken = verify(token, tokenKey) as { payload: string };
 
-let iv = randomBytes(16);
-let key = process.env.payloadKey as string;
+        const decipher = createDecipheriv('aes256', payloadKey, iv);
+        const decryptedPayload = decipher.update(decodedToken.payload, 'hex', 'utf-8') + decipher.final('utf8');
 
-let cipher = createCipheriv('aes-256-ocb', Buffer.from(key), iv);
-let encrypted = cipher.update(JSON.stringify(payload));
-encrypted = Buffer.concat([encrypted, cipher.final()]);
+        return { payload: decryptedPayload }
 
-console.log(iv.toString('hex') + ':' + encrypted.toString('hex'));
-//}
-
-// const decrypt = (text: any) => {
-//     let key = process.env.payloadKey as string;
-
-//     let textParts = text.split(':');
-//     let iv = Buffer.from(textParts.shift(), 'hex');
-//     let encryptedText = Buffer.from(textParts.join(':'), 'hex');
-//     let decipher = createDecipheriv('aes-256-ocb', Buffer.from(key), iv);
-//     let decrypted = decipher.update(encryptedText);
-//     decrypted = Buffer.concat([decrypted, decipher.final()]);
-//     return decrypted.toString();
-// }
-
-/*
-
-const message = { email: "email", name: "name", surname: "surname" };
-const key = randomBytes(32);
-const iv = randomBytes(16);
-
-const cipher = createCipheriv('aes256', key, iv);
-
-/// Encrypt
-
-const encryptedMessage = cipher.update(JSON.stringify(message), 'utf8', 'hex') + cipher.final('hex');
-console.log({ Encrypted: encryptedMessage, key });
-
-/// Decrypt
-
-const decipher = createDecipheriv('aes256', key, iv);
-const decryptedMessage = decipher.update(encryptedMessage, 'hex', 'utf-8') + decipher.final('utf8');
-console.log(`Deciphered: ${decryptedMessage.toString('utf-8')}`);
-
-*/
+    } catch (error) {
+        console.log("Invalid Token");
+    }
+}
