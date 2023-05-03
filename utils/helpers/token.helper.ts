@@ -3,13 +3,17 @@ import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
 
 const tokenKey = Buffer.from(process.env.tokenKey as string, 'hex');
 const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex');
-const iv = Buffer.from(process.env.iv as string, 'hex');
+const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex');
 
-const createToken = (email: string, userId: number) => {
-    const payload = { email, userId };
+const createToken = (email: string, userId: string) => {
 
-    const cipher = createCipheriv('aes256', payloadKey, iv);
-    const encryptedPayload = cipher.update(JSON.stringify(payload), 'utf8', 'hex') + cipher.final('hex');
+    const cipherUserId = createCipheriv('aes256', payloadKey, payloadIv);
+    const encryptedUserId = cipherUserId.update(userId, 'utf-8', 'hex') + cipherUserId.final('hex');
+
+    const payload = { email, userId: encryptedUserId }
+
+    const cipherPayload = createCipheriv('aes256', payloadKey, payloadIv);
+    const encryptedPayload = cipherPayload.update(JSON.stringify(payload), 'utf8', 'hex') + cipherPayload.final('hex');
 
     const token = sign(
         encryptedPayload,
@@ -20,12 +24,6 @@ const createToken = (email: string, userId: number) => {
     );
 
     return token;
-
-    /* 
-    hash option
-     use a hash function in here and use provided strings as hash and remember to salt them with 'hashFunction'.key()
-     emailMSKnameMSKsurname,Date.now()
-    */
 }
 
 const verifyToken = (token: string) => {
@@ -33,7 +31,7 @@ const verifyToken = (token: string) => {
     try {
         const decodedToken = verify(token, tokenKey) as { payload: string };
 
-        const decipher = createDecipheriv('aes256', payloadKey, iv);
+        const decipher = createDecipheriv('aes256', payloadKey, payloadIv);
         const decryptedPayload = decipher.update(decodedToken.payload, 'hex', 'utf-8') + decipher.final('utf8');
 
         return { payload: decryptedPayload }
@@ -42,3 +40,15 @@ const verifyToken = (token: string) => {
         console.log("Invalid Token");
     }
 }
+
+
+/*
+
+userId decryption
+
+const user = JSON.parse(decryptedPayload) as { email: string, userId: string }
+
+        const decipherUserId = createDecipheriv('aes256', payloadKey, iv);
+        const decryptedUserId = decipherUserId.update(user.userId, 'hex', 'utf-8') + decipherUserId.final('utf8');
+
+*/
