@@ -3,7 +3,8 @@ import { Schema, SchemaTypes, Model } from 'mongoose'
 const userSchema = new Schema({
     email: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     passwordHash: {
         type: String,
@@ -29,7 +30,12 @@ const userSchema = new Schema({
                 required: false
             }
         }
-    ]
+    ],
+    status: {
+        type: Boolean,
+        required: true,
+        default: true
+    }
 });
 
-exports.module = new Model('User', userSchema);
+export default new Model('User', userSchema);

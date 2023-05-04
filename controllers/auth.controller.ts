@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
+import { ValidatedRequest } from "express-joi-validation";
+import { HttpStatusCode } from "axios";
 import { sendMail } from '../utils/providers/mail/config';
 import { errorDataResult, successDataResult, successResult, errorResult } from '../utils/constants/results'
+import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
+import userModel from '../models/user'
+import { LoginType } from '../types/auth.types';
+
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
 
@@ -22,13 +28,39 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
 }
 
-export const register = (req: Request, res: Response, next: NextFunction) => {
+export const register = async (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
+
+    const isEmailExists = await userModel.findOne({ email: req.body.email, status: true }).exec();
+
+    if (isEmailExists)
+        return res
+            .status(HttpStatusCode.BadRequest)
+            .json(errorResult("User already exists!"))
+
+    const password = req.body.password;
+    const passwordHashAndSalt = await createPasswordHash(password);
+
+    const user = {
+        email: req.body.email,
+        passwordHash: passwordHashAndSalt.hash,
+        passwordSalt: passwordHashAndSalt.salt,
+        name: req.body.name,
+        surname: req.body.surname
+    }
+
+    await userModel.create(user)
+        .catch(error => {
+            console.error(error);
+            return res
+                .status(HttpStatusCode.BadRequest)
+                .json(errorResult("User creation failed!"));
+        });
 
     /*
     firstly check is email exists in my db 
         if it does --> return error message about it
         if it doesn't --> save mail with password hashes to db and generate a security code uniquely with help of some packages then save it in the db too
-    send mail to the user a welcome mail and send to a message as email code
+    send mail to the user a welcome mail and send to a message with email code
     */
 
 
