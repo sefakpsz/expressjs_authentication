@@ -15,6 +15,9 @@ import { connectToDb } from './databases/index'
 
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 app.use('/auth', auth);
 app.use('/board', board);
 app.use('/card', card);

@@ -7,7 +7,7 @@ import { validator, Register, Login, PasswordChange, PasswordReset, SecurityCont
 const router = Router();
 
 //ASK OSMAN TO USAGE OF BODY INSTEAD OF QUERY
-router.post('/register', validator.query(Register), register);
+router.post('/register', validator.body(Register), register);
 
 router.post('/securityControl', validator.query(SecurityControl), securityControl);
 
