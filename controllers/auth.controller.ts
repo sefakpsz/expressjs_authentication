@@ -7,11 +7,11 @@ import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/passwor
 import { distinctive_add_failed, success, user_add_failed, user_already_exists } from '../utils/constants/messages'
 import userModel from '../models/user'
 import distinctiveModel from '../models/userDistinctive'
-import { LoginType } from '../types/auth.types';
+import { LoginType, RegisterType } from '../types/auth.types';
 import { randomBytes } from 'crypto';
 
 
-export const login = (req: Request, res: Response, next: NextFunction) => {
+export const login = (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
 
     /*
     get mail and password
@@ -31,7 +31,7 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
 }
 
-export const register = async (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
+export const register = async (req: ValidatedRequest<RegisterType>, res: Response, next: NextFunction) => {
 
     const isEmailExists = await userModel.findOne({ email: req.body.email, status: true }).exec();
 
@@ -81,6 +81,11 @@ export const register = async (req: ValidatedRequest<LoginType>, res: Response, 
     return res
         .status(HttpStatusCode.Ok)
         .json(successResult(distinctiveCode, success))
+}
+
+export const sendMfaCode = (req: Request, res: Response, next: NextFunction) => {
+
+    //send mfa code with help of type of mfa and send it after checking distinctive code
 }
 
 export const securityControl = (req: Request, res: Response, next: NextFunction) => {

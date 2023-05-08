@@ -1,13 +1,15 @@
 import { Router } from 'express'
 
-import { login, logout, register, passwordChange, passwordReset } from '../controllers/auth.controller'
+import { login, logout, register, passwordChange, passwordReset, securityControl } from '../controllers/auth.controller'
 
-import { validator, Register, Login, PasswordChange, PasswordReset } from '../validations/auth.validations';
+import { validator, Register, Login, PasswordChange, PasswordReset, SecurityControl } from '../validations/auth.validations';
 
 const router = Router();
 
 //ASK OSMAN TO USAGE OF BODY INSTEAD OF QUERY
 router.post('/register', validator.query(Register), register);
+
+router.post('/securityControl', validator.query(SecurityControl), securityControl);
 
 router.get('/login', validator.query(Login), login);
 

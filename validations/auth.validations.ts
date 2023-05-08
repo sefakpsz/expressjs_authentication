@@ -15,6 +15,10 @@ export const Register = Joi.object({
     surname: Joi.string().required()
 });
 
+export const SecurityControl = Joi.object({
+
+});
+
 export const Login = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
