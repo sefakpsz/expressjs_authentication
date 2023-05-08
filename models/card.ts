@@ -1,4 +1,4 @@
-import { SchemaTypes, Schema, Model } from "mongoose";
+import { SchemaTypes, Schema, model } from "mongoose";
 
 const cardSchema = new Schema({
     description: {
@@ -43,4 +43,4 @@ const cardSchema = new Schema({
     ]
 })
 
-module.exports = new Model('Card', cardSchema);
+export default model('Card', cardSchema);

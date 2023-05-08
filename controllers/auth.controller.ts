@@ -2,10 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { ValidatedRequest } from "express-joi-validation";
 import { HttpStatusCode } from "axios";
 import { sendMail } from '../utils/providers/mail/config';
-import { errorDataResult, successDataResult, successResult, errorResult } from '../utils/constants/results'
+import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
+import { distinctive_add_failed, success, user_add_failed, user_already_exists } from '../utils/constants/messages'
 import userModel from '../models/user'
+import distinctiveModel from '../models/userDistinctive'
 import { LoginType } from '../types/auth.types';
+import { randomBytes } from 'crypto';
 
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
@@ -35,12 +38,13 @@ export const register = async (req: ValidatedRequest<LoginType>, res: Response, 
     if (isEmailExists)
         return res
             .status(HttpStatusCode.BadRequest)
-            .json(errorResult("User already exists!"))
+            .json(errorResult(null, user_already_exists))
 
     const password = req.body.password;
     const passwordHashAndSalt = await createPasswordHash(password);
 
     const user = {
+        id: "",
         email: req.body.email,
         passwordHash: passwordHashAndSalt.hash,
         passwordSalt: passwordHashAndSalt.salt,
@@ -49,23 +53,34 @@ export const register = async (req: ValidatedRequest<LoginType>, res: Response, 
     }
 
     await userModel.create(user)
+        .then(data => {
+            user.id = data.id;
+        })
         .catch(error => {
             console.error(error);
             return res
                 .status(HttpStatusCode.BadRequest)
-                .json(errorResult("User creation failed!"));
+                .json(errorResult(null, user_add_failed));
         });
 
-    /*
-    firstly check is email exists in my db 
-        if it does --> return error message about it
-        if it doesn't --> save mail with password hashes to db and generate a security code uniquely with help of some packages then save it in the db too
-    send mail to the user a welcome mail and send to a message with email code
-    */
+    const distinctiveCode = randomBytes(4).toString('hex');
 
+    const distinctiveData = {
+        user: user.id,
+        code: distinctiveCode
+    }
 
-    //sendMail(req.body.email, `SUBJECT`, `MESSAGE`);
-    successResult("successfull");
+    await distinctiveModel.create(distinctiveData)
+        .catch(error => {
+            console.error(error);
+            return res
+                .status(HttpStatusCode.BadRequest)
+                .json(errorResult(null, distinctive_add_failed));
+        });
+
+    return res
+        .status(HttpStatusCode.Ok)
+        .json(successResult(distinctiveCode, success))
 }
 
 export const securityControl = (req: Request, res: Response, next: NextFunction) => {

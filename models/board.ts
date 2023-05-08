@@ -1,46 +1,50 @@
-import { Schema, Model, SchemaTypes } from 'mongoose';
+import { Schema, model, SchemaTypes } from 'mongoose';
 
-const boardSchema = new Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: false
-    },
-    coverImage: {
-        type: String,
-        required: false
-    },
-    visibilityTypeId: {
-        type: SchemaTypes.ObjectId,
-        ref: 'VisibilityType',
-        required: true
-    },
-    members: [
-        {
-            userId: {
-                type: SchemaTypes.ObjectId,
-                ref: 'User',
-                required: true
+const boardSchema = new Schema(
+    {
+        title: {
+            type: String,
+            required: true
+        },
+        description: {
+            type: String,
+            required: false
+        },
+        coverImage: {
+            type: String,
+            required: false
+        },
+        visibilityTypeId: {
+            type: SchemaTypes.ObjectId,
+            ref: 'VisibilityType',
+            required: true
+        },
+        members: [
+            {
+                userId: {
+                    type: SchemaTypes.ObjectId,
+                    ref: 'User',
+                    required: true
+                }
             }
-        }
-    ],
-    groups: [
-        {
-            group: {
-                type: SchemaTypes.ObjectId,
-                ref: 'Group',
-                required: true
+        ],
+        groups: [
+            {
+                group: {
+                    type: SchemaTypes.ObjectId,
+                    ref: 'Group',
+                    required: true
+                }
             }
+        ],
+        owner: {
+            type: SchemaTypes.ObjectId,
+            ref: 'User',
+            required: true
         }
-    ],
-    owner: {
-        type: SchemaTypes.ObjectId,
-        ref: 'User',
-        required: true
-    }
-})
+    },
+    {
+        timestamps: true
+    });
 
-module.exports = new Model('Board', boardSchema);
+export default model('Board', boardSchema);
