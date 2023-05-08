@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { login, logout, register, passwordChange, passwordReset, securityControl } from '../controllers/auth.controller'
+import { login, logout, register, passwordChange, passwordReset, securityControl, sendMfaCode } from '../controllers/auth.controller'
 
-import { validator, Register, Login, PasswordChange, PasswordReset, SecurityControl } from '../validations/auth.validations';
+import { validator, Register, Login, PasswordChange, PasswordReset, SecurityControl, SendMfaCode } from '../validations/auth.validations';
 
 const router = Router();
 
@@ -10,6 +10,8 @@ const router = Router();
 router.post('/register', validator.query(Register), register);
 
 router.post('/securityControl', validator.query(SecurityControl), securityControl);
+
+router.post('/sendMfaCode', validator.query(SendMfaCode), sendMfaCode);
 
 router.get('/login', validator.query(Login), login);
 

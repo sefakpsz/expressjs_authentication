@@ -16,7 +16,11 @@ export const Register = Joi.object({
 });
 
 export const SecurityControl = Joi.object({
+    //check distinctive code and MFAs
+});
 
+export const SendMfaCode = Joi.object({
+    code: Joi.string().required()
 });
 
 export const Login = Joi.object({
