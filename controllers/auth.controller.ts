@@ -4,14 +4,41 @@ import { HttpStatusCode } from "axios";
 import { sendMail } from '../utils/providers/mail/config';
 import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
-import { distinctive_add_failed, success, user_add_failed, user_already_exists } from '../utils/constants/messages'
+import messages from '../utils/constants/messages'
 import userModel from '../models/user'
 import distinctiveModel from '../models/userDistinctive'
 import { LoginType, RegisterType } from '../types/auth.types';
 import { randomBytes } from 'crypto';
 
+//#region Logic of Auth
+/* 
 
-export const login = (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
+User'll enter mail and password --> it returns a distinguishCode
+
+With help of distinguishCode, user get mfa/mfas (which options are selected from user)
+
+User go to the getToken() type distinguishCode-MFA code/codes
+
+if all of them true, user get his/her token
+and write trigger in the mongodb when expireDate is came status of distinguishDate will be false!
+
+*/
+//#endregion
+
+export const login = async (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
+
+    const email = req.body.email
+    const password = req.body.password
+
+    const doesUserExist = await userModel.findOne({ email })
+        .catch(() => {
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(
+                    null,
+
+                )
+            )
+        })
 
     /*
     get mail and password
