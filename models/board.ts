@@ -1,4 +1,5 @@
 import { Schema, model, SchemaTypes } from 'mongoose';
+import { BaseStatusEnum } from '../utils/constants/enums';
 
 const boardSchema = new Schema(
     {
@@ -41,6 +42,11 @@ const boardSchema = new Schema(
             type: SchemaTypes.ObjectId,
             ref: 'User',
             required: true
+        },
+        status: {
+            type: BaseStatusEnum,
+            required: true,
+            default: BaseStatusEnum.Active
         }
     },
     {

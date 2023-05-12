@@ -1,4 +1,5 @@
 import { SchemaTypes, Schema, model } from "mongoose";
+import { BaseStatusEnum } from "../utils/constants/enums";
 
 const groupSchema = new Schema(
     {
@@ -23,7 +24,12 @@ const groupSchema = new Schema(
                     required: true
                 }
             }
-        ]
+        ],
+        status: {
+            type: BaseStatusEnum,
+            required: true,
+            default: BaseStatusEnum.Active
+        }
     },
     {
         timestamps: true

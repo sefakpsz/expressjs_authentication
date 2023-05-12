@@ -1,4 +1,5 @@
 import { SchemaTypes, Schema, model } from "mongoose";
+import { BaseStatusEnum } from "../utils/constants/enums";
 
 const cardSchema = new Schema({
     description: {
@@ -40,7 +41,12 @@ const cardSchema = new Schema({
                 }
             }
         }
-    ]
+    ],
+    status: {
+        type: BaseStatusEnum,
+        required: true,
+        default: BaseStatusEnum.Active
+    }
 })
 
 export default model('Card', cardSchema);

@@ -8,8 +8,9 @@ const userDistinctiveSchema = new Schema(
             ref: 'User',
             required: true
         },
-        code: {
-            type: String,
+        mfaType: {
+            type: SchemaTypes.ObjectId,
+            ref: 'TypeOfMfa',
             required: true
         },
         status: {

@@ -1,4 +1,5 @@
 import { Schema, SchemaTypes, model } from 'mongoose'
+import { BaseStatusEnum } from '../utils/constants/enums';
 
 const userSchema = new Schema(
     {
@@ -33,9 +34,9 @@ const userSchema = new Schema(
             }
         ],
         status: {
-            type: Boolean,
+            type: BaseStatusEnum,
             required: true,
-            default: true
+            default: BaseStatusEnum.Active
         }
     },
     {

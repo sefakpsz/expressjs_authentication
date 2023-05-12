@@ -1,14 +1,19 @@
 import { Schema, SchemaTypes, model } from 'mongoose'
 import { BaseStatusEnum } from '../utils/constants/enums';
 
-const userDistinctiveSchema = new Schema(
+const mfaLogSchema = new Schema(
     {
         user: {
             type: SchemaTypes.ObjectId,
             ref: 'User',
             required: true
         },
-        code: {
+        mfaType: {
+            type: SchemaTypes.ObjectId,
+            ref: 'TypeOfMfa',
+            required: true
+        },
+        dioristicCode: {
             type: String,
             required: true
         },
@@ -16,10 +21,14 @@ const userDistinctiveSchema = new Schema(
             type: BaseStatusEnum,
             required: true,
             default: BaseStatusEnum.Active
+        },
+        expireDate: {
+            type: Date,
+            required: true
         }
     },
     {
         timestamps: true
     });
 
-export default model('UserDistinctive', userDistinctiveSchema);
+export default model('MfaLog', mfaLogSchema);

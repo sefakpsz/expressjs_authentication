@@ -1,4 +1,5 @@
 import { model, Schema } from 'mongoose'
+import { BaseStatusEnum } from '../utils/constants/enums'
 
 const visibilityTypes = new Schema(
     {
@@ -9,6 +10,11 @@ const visibilityTypes = new Schema(
         description: {
             type: String,
             required: true
+        },
+        status: {
+            type: BaseStatusEnum,
+            required: true,
+            default: BaseStatusEnum.Active
         }
     },
     {
