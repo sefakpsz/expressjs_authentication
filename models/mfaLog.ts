@@ -1,5 +1,5 @@
 import { Schema, SchemaTypes, model } from 'mongoose'
-import { BaseStatusEnum } from '../utils/constants/enums';
+import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 
 const mfaLogSchema = new Schema(
     {
@@ -9,8 +9,7 @@ const mfaLogSchema = new Schema(
             required: true
         },
         mfaType: {
-            type: SchemaTypes.ObjectId,
-            ref: 'TypeOfMfa',
+            type: MfaEnum,
             required: true
         },
         dioristicCode: {
@@ -18,9 +17,9 @@ const mfaLogSchema = new Schema(
             required: true
         },
         status: {
-            type: BaseStatusEnum,
+            type: MfaStatusEnum,
             required: true,
-            default: BaseStatusEnum.Active
+            default: MfaStatusEnum.NotUsed
         },
         expireDate: {
             type: Date,

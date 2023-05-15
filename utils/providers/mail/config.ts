@@ -1,18 +1,20 @@
-import nodemailer from 'nodemailer';
+import { createTransport } from 'nodemailer';
 
-let transporter = nodemailer.createTransport({
-    host: 'smtp.office365.com',
-    port: 587,
+let transporterConfig = {
+    host: process.env.mailHost,
+    port: parseInt(process.env.mailPort as string),
     secure: false,
     auth: {
-        user: 'testsefakapisiz@outlook.com',
-        pass: 'sefa1907'
+        user: process.env.mailUser,
+        pass: process.env.mailPassword
     }
-});
+}
 
-export const sendMail = (to: string, subject: string, text: string, code?: string) => {
+let transporter = createTransport(transporterConfig);
+
+export const sendMail = async (to: string, subject: string, text: string, code?: string) => {
     let mailOptions = {
-        from: 'testsefakapisiz@outlook.com',
+        from: 'MSK',
         to,
         subject,
         text

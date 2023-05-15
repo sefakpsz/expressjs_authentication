@@ -9,11 +9,15 @@ import userModel from '../models/user'
 import distinctiveModel from '../models/userDistinctive'
 import { LoginType, RegisterType } from '../types/auth.types';
 import { randomBytes } from 'crypto';
+import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
+import userDistinctiveModel from '../models/userDistinctive';
+import userMfaModel from '../models/userMfas';
+import mfaLogModel from '../models/mfaLog';
 
 //#region Logic of Auth
 /* 
 
-User'll enter mail and password --> it returns a distinguishCode
+User'll enter mail and password --> it returns a distinctiveCode
 
 With help of distinguishCode, user get mfa/mfas (which options are selected from user)
 
@@ -30,24 +34,92 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     const email = req.body.email
     const password = req.body.password
 
-    const doesUserExist = await userModel.findOne({ email })
-        .catch(() => {
+    const user = await userModel.findOne({ email, status: BaseStatusEnum.Active })
+        .catch(error => {
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-
+                    error
                 )
             )
         })
 
-    /*
-    get mail and password
-    firstly check is there any mail in db
-        if there isn't send error message
-    then check password
-        if password is wrong send error message
-    then if all of them is true send mail to securityCode
-    */
+    if (!user)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(
+                null,
+                messages.user_couldnt_found
+            )
+        )
+
+    const passwordVerification = await verifyPasswordHash(req.body.password, `user.passwordHash`, `user.passwordSalt`)
+
+    if (!passwordVerification)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(
+                null,
+                messages.user_wrong_password
+            )
+        )
+
+    const userDistinctiveData = {
+        user,
+        code: randomBytes(8)
+    }
+
+    await userDistinctiveModel.create(userDistinctiveData)
+        .catch(error => {
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(
+                    null,
+                    error
+                )
+            )
+        })
+
+
+    const activeMfasOfUser = await userMfaModel.find({ user: `user._id`, status: BaseStatusEnum.Active })
+        .catch(error => {
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(
+                    null,
+                    error
+                )
+            )
+        })
+
+    if (activeMfasOfUser.length === 0)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(
+                null,
+                messages.
+            )
+        )
+
+    for (let mfa of activeMfasOfUser) {
+        if (mfa.mfaType === MfaEnum.Email) {
+            sendMail(`user.email`, "Login", `Email Code: user.email`)
+            await mfaLogModel.create({
+                user: user._id,
+                mfaType: MfaEnum.Email,
+                dioristicCode: randomBytes(2),
+                status: MfaStatusEnum.NotUsed,
+                expireDate: 
+            })
+        }
+        else if (mfa.mfaType === MfaEnum.GoogleAuth)
+            // google auth implementation
+    }
+    // check to the which mfa type active for that user and then send code according to infos into activennesOfMfa of user
+
+
+
+    return res.status(HttpStatusCode.BadRequest).json(
+        successResult(
+            userDistinctiveData.code,
+            messages.success
+        )
+    )
 }
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
@@ -65,7 +137,7 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
     if (isEmailExists)
         return res
             .status(HttpStatusCode.BadRequest)
-            .json(errorResult(null, user_already_exists))
+            .json(errorResult(null, messages.user_already_exists))
 
     const password = req.body.password;
     const passwordHashAndSalt = await createPasswordHash(password);
@@ -87,7 +159,7 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
             console.error(error);
             return res
                 .status(HttpStatusCode.BadRequest)
-                .json(errorResult(null, user_add_failed));
+                .json(errorResult(null, messages.user_add_failed));
         });
 
     const distinctiveCode = randomBytes(4).toString('hex');
@@ -102,18 +174,18 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
             console.error(error);
             return res
                 .status(HttpStatusCode.BadRequest)
-                .json(errorResult(null, distinctive_add_failed));
+                .json(errorResult(null, messages.distinctive_add_failed));
         });
 
     return res
         .status(HttpStatusCode.Ok)
-        .json(successResult(distinctiveCode, success))
+        .json(successResult(distinctiveCode, messages.success))
 }
 
-export const sendMfaCode = (req: Request, res: Response, next: NextFunction) => {
+// export const sendMfaCode = (req: Request, res: Response, next: NextFunction) => {
 
-    //send mfa code with help of type of mfa and send it after checking distinctive code
-}
+//     //send mfa code with help of type of mfa and send it after checking distinctive code
+// }
 
 export const securityControl = (req: Request, res: Response, next: NextFunction) => {
     /*

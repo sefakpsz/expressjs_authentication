@@ -14,6 +14,7 @@ export default {
     user_delete_failed: 'User deleting has failed!',
     user_already_exists: 'User already exists!',
     user_couldnt_found: "User couldn't find",
+    user_wrong_password: "Provided password is not true!",
     //#endregion
 
     //#region Board
@@ -38,6 +39,10 @@ export default {
     visibilityType_add_failed: 'VisibilityType adding has failed!',
     visibilityType_update_failed: 'VisibilityType updating has failed!',
     visibilityType_delete_failed: 'VisibilityType deleting has failed!',
+    //#endregion
+
+    //#region UserMfas
+    userMfas_couldnt_found: "UserMfas couldn't found",
     //#endregion
 }
 

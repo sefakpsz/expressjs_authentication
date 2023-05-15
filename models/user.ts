@@ -1,4 +1,4 @@
-import { Schema, SchemaTypes, model } from 'mongoose'
+import { Schema, SchemaTypes, model, Model } from 'mongoose'
 import { BaseStatusEnum } from '../utils/constants/enums';
 
 const userSchema = new Schema(
