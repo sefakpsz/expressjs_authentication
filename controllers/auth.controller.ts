@@ -11,7 +11,7 @@ import { LoginType, RegisterType } from '../types/auth.types';
 import { randomBytes } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
-import userMfaModel from '../models/userMfas';
+import userMfaModel from '../models/userMfa';
 import mfaLogModel from '../models/mfaLog';
 
 //#region Logic of Auth
