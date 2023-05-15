@@ -22,4 +22,4 @@ const userMfas = new Schema(
         timestamps: true
     });
 
-export default model('UserMfas', userMfas);
+export default model('UserMfa', userMfas);
