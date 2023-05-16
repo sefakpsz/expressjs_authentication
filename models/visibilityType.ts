@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose'
+import { Model, Schema } from 'mongoose'
 import { BaseStatusEnum } from '../utils/constants/enums'
 
 const visibilityType = new Schema(
@@ -21,4 +21,4 @@ const visibilityType = new Schema(
         timestamps: true
     })
 
-export default model(`VisibilityType`, visibilityType)
+export default new Model(`VisibilityType`, visibilityType)

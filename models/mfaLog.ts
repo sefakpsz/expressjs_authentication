@@ -1,5 +1,5 @@
-import { Schema, SchemaTypes, model } from 'mongoose'
-import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
+import { Schema, SchemaTypes, Model } from 'mongoose'
+import { MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 
 const mfaLogSchema = new Schema(
     {
@@ -30,4 +30,4 @@ const mfaLogSchema = new Schema(
         timestamps: true
     });
 
-export default model('MfaLog', mfaLogSchema);
+export default new Model('MfaLog', mfaLogSchema);

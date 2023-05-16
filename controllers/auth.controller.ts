@@ -8,7 +8,7 @@ import messages from '../utils/constants/messages'
 import userModel from '../models/user'
 import distinctiveModel from '../models/userDistinctive'
 import { LoginType, RegisterType } from '../types/auth.types';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
 import userMfaModel from '../models/userMfa';
@@ -53,6 +53,14 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
         )
 
     const passwordVerification = await verifyPasswordHash(req.body.password, `user.passwordHash`, `user.passwordSalt`)
+        .catch(error => {
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(
+                    null,
+                    error
+                )
+            )
+        })
 
     if (!passwordVerification)
         return res.status(HttpStatusCode.BadRequest).json(
@@ -78,7 +86,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
         })
 
 
-    const activeMfasOfUser = await userMfaModel.find({ user: `user._id`, status: BaseStatusEnum.Active })
+    const userMfas = await userMfaModel.find({ user: `user._id`, status: BaseStatusEnum.Active })
         .catch(error => {
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
@@ -88,31 +96,22 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             )
         })
 
-    if (activeMfasOfUser.length === 0)
+    if (userMfas.length === 0)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(
                 null,
-                messages.
+                messages.userMfas_couldnt_found
             )
         )
 
-    for (let mfa of activeMfasOfUser) {
+    for (let mfa of userMfas) {
         if (mfa.mfaType === MfaEnum.Email) {
-            sendMail(`user.email`, "Login", `Email Code: user.email`)
-            await mfaLogModel.create({
-                user: user._id,
-                mfaType: MfaEnum.Email,
-                dioristicCode: randomBytes(2),
-                status: MfaStatusEnum.NotUsed,
-                expireDate: 
-            })
+            await sendEmailFunc(user.id, user.email, res)
         }
-        else if (mfa.mfaType === MfaEnum.GoogleAuth)
+        else if (mfa.mfaType === MfaEnum.GoogleAuth) {
             // google auth implementation
+        }
     }
-    // check to the which mfa type active for that user and then send code according to infos into activennesOfMfa of user
-
-
 
     return res.status(HttpStatusCode.BadRequest).json(
         successResult(
@@ -120,6 +119,27 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             messages.success
         )
     )
+}
+
+const sendEmailFunc = async (userId: string, userEmail: string, res: Response) => {
+    let emailCode = randomInt(100000, 999999)
+
+    sendMail(userEmail, "Login", `Email Code: ${emailCode}`)
+    await mfaLogModel.create({
+        user: userId,
+        mfaType: MfaEnum.Email,
+        dioristicCode: emailCode,
+        status: MfaStatusEnum.NotUsed,
+        expireDate: new Date().getMinutes() + 3
+    })
+        .catch(error => {
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(
+                    null,
+                    error
+                )
+            )
+        })
 }
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {

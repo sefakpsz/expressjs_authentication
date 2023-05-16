@@ -1,4 +1,4 @@
-import { SchemaTypes, Schema, model } from "mongoose";
+import { SchemaTypes, Schema, Model } from "mongoose";
 import { BaseStatusEnum } from "../utils/constants/enums";
 
 const groupSchema = new Schema(
@@ -35,4 +35,4 @@ const groupSchema = new Schema(
         timestamps: true
     })
 
-export default model('Group', groupSchema);
+export default new Model('Group', groupSchema);
