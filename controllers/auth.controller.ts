@@ -6,8 +6,7 @@ import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
 import messages from '../utils/constants/messages'
 import userModel from '../models/user'
-import distinctiveModel from '../models/userDistinctive'
-import { LoginType, RegisterType } from '../types/auth.types';
+import { CheckMfas, LoginType, RegisterType } from '../types/auth.types';
 import { randomBytes, randomInt } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
@@ -17,14 +16,14 @@ import mfaLogModel from '../models/mfaLog';
 //#region Logic of Auth
 /* 
 
-User'll enter mail and password --> it returns a distinctiveCode
+User'll enter mail and password --> it returns a distinctiveCode randomBytes(4).toString("hex")
 
-With help of distinguishCode, user get mfa/mfas (which options are selected from user)
+With help of distinctiveCode, user get mfa/mfas (which options are selected from user)
 
-User go to the getToken() type distinguishCode-MFA code/codes
+User go to the getToken() type distinctiveCode-MFA code/codes
 
 if all of them true, user get his/her token
-and write trigger in the mongodb when expireDate is came status of distinguishDate will be false!
+and WRITE TRIGGER in the mongodb when expireDate is came status of distinctiveCode will be false!
 
 */
 //#endregion
@@ -35,11 +34,12 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     const password = req.body.password
 
     const user = await userModel.findOne({ email, status: BaseStatusEnum.Active })
-        .catch(error => {
+        .catch((error: Error) => {
+            console.error(error.message)
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-                    error
+                    messages.user_couldnt_found
                 )
             )
         })
@@ -52,12 +52,12 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             )
         )
 
-    const passwordVerification = await verifyPasswordHash(req.body.password, `user.passwordHash`, `user.passwordSalt`)
-        .catch(error => {
+    const passwordVerification = await verifyPasswordHash(password, user.passwordHash, user.passwordSalt)
+        .catch((error: Error) => {
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-                    error
+                    error.message
                 )
             )
         })
@@ -72,26 +72,28 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 
     const userDistinctiveData = {
         user,
-        code: randomBytes(8)
+        code: randomBytes(4).toString("hex")
     }
 
     await userDistinctiveModel.create(userDistinctiveData)
-        .catch(error => {
+        .catch((error: Error) => {
+            console.error(error.message)
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-                    error
+                    messages.userDistinctive_add_failed
                 )
             )
         })
 
 
-    const userMfas = await userMfaModel.find({ user: `user._id`, status: BaseStatusEnum.Active })
-        .catch(error => {
+    const userMfas = await userMfaModel.find({ user: user._id, status: BaseStatusEnum.Active })
+        .catch((error: Error) => {
+            console.error(error.message)
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-                    error
+                    messages.userMfa_couldnt_found
                 )
             )
         })
@@ -100,7 +102,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(
                 null,
-                messages.userMfas_couldnt_found
+                messages.userMfa_couldnt_found
             )
         )
 
@@ -132,11 +134,12 @@ const sendEmailFunc = async (userId: string, userEmail: string, res: Response) =
         status: MfaStatusEnum.NotUsed,
         expireDate: new Date().getMinutes() + 3
     })
-        .catch(error => {
+        .catch((error: Error) => {
+            console.error(error.message)
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-                    error
+                    messages.userMfa_add_failed
                 )
             )
         })
@@ -179,7 +182,12 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
             console.error(error);
             return res
                 .status(HttpStatusCode.BadRequest)
-                .json(errorResult(null, messages.user_add_failed));
+                .json(
+                    errorResult(
+                        null,
+                        messages.user_add_failed
+                    )
+                );
         });
 
     const distinctiveCode = randomBytes(4).toString('hex');
@@ -189,17 +197,24 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
         code: distinctiveCode
     }
 
-    await distinctiveModel.create(distinctiveData)
-        .catch(error => {
+    await userDistinctiveModel.create(distinctiveData)
+        .catch((error: Error) => {
             console.error(error);
             return res
                 .status(HttpStatusCode.BadRequest)
-                .json(errorResult(null, messages.distinctive_add_failed));
-        });
+                .json(
+                    errorResult(
+                        null,
+                        messages.userDistinctive_add_failed
+                    )
+                )
+        })
 
     return res
         .status(HttpStatusCode.Ok)
-        .json(successResult(distinctiveCode, messages.success))
+        .json(
+            successResult(distinctiveCode, messages.success)
+        )
 }
 
 // export const sendMfaCode = (req: Request, res: Response, next: NextFunction) => {
@@ -207,7 +222,21 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
 //     //send mfa code with help of type of mfa and send it after checking distinctive code
 // }
 
-export const securityControl = (req: Request, res: Response, next: NextFunction) => {
+export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
+
+    const distinctiveCode = req.query.distinctiveCode
+
+    const userDistinctive = await userDistinctiveModel.find({ code: distinctiveCode, status: BaseStatusEnum.Active })
+        .catch((error: Error) => {
+            console.error(error.message)
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(
+                    null,
+                    messages.userDistinctive_couldnt_find
+                )
+            )
+        })
+
     /*
     find user from securityCode
     and go to the mfa table to check provided mail code is equal with in db

@@ -15,7 +15,8 @@ export const Register = Joi.object({
     surname: Joi.string().required()
 });
 
-export const SecurityControl = Joi.object({
+export const CheckMfas = Joi.object({
+    distinctiveCode: Joi.string().required(),
     //check distinctive code and MFAs
 });
 

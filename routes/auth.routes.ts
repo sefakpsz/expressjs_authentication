@@ -1,15 +1,15 @@
 import { Router } from 'express'
 
-import { login, logout, register, passwordChange, passwordReset, securityControl } from '../controllers/auth.controller'
+import { login, logout, register, passwordChange, passwordReset, checkMfas } from '../controllers/auth.controller'
 
-import { validator, Register, Login, PasswordChange, PasswordReset, SecurityControl, SendMfaCode } from '../validations/auth.validations';
+import { validator, Register, Login, PasswordChange, PasswordReset, CheckMfas } from '../validations/auth.validations';
 
 const router = Router();
 
 //ASK OSMAN TO USAGE OF BODY INSTEAD OF QUERY
 router.post('/register', validator.body(Register), register);
 
-router.post('/securityControl', validator.query(SecurityControl), securityControl);
+router.post('/securityControl', validator.query(CheckMfas), checkMfas);
 
 //router.post('/sendMfaCode', validator.query(SendMfaCode), sendMfaCode);
 

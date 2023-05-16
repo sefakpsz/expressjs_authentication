@@ -3,9 +3,10 @@ export default {
     error: 'Operation has failed!',
 
     //#region User Distinctive
-    distinctive_add_failed: 'Distinctive adding has failed!',
-    distinctive_update_failed: 'Distinctive updating has failed!',
-    distinctive_delete_failed: 'Distinctive deleting has failed!',
+    userDistinctive_add_failed: 'UserDistinctive adding has failed!',
+    userDistinctive_update_failed: 'UserDistinctiveupdating has failed!',
+    userDistinctive_delete_failed: 'UserDistinctive deleting has failed!',
+    userDistinctive_couldnt_find: "UserDistinctive couldn't find!",
     //#endregion
 
     //#region User
@@ -42,7 +43,10 @@ export default {
     //#endregion
 
     //#region UserMfas
-    userMfas_couldnt_found: "UserMfas couldn't found",
+    userMfa_add_failed: 'UserMfa adding has failed!',
+    userMfa_update_failed: 'UserMfa updating has failed!',
+    userMfa_delete_failed: 'UserMfa deleting has failed!',
+    userMfa_couldnt_found: "UserMfa couldn't found",
     //#endregion
 }
 

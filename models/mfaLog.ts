@@ -12,6 +12,7 @@ const mfaLogSchema = new Schema(
             type: MfaEnum,
             required: true
         },
+        //seperation code
         dioristicCode: {
             type: String,
             required: true

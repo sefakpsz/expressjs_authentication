@@ -16,6 +16,12 @@ export interface RegisterType extends ValidatedRequestSchema {
     };
 }
 
+export interface CheckMfas extends ValidatedRequestSchema {
+    [ContainerTypes.Query]: {
+        distinctiveCode: string
+    };
+}
+
 //ask it to osman
 // export interface RegisterType extends ValidatedRequestSchema {
 //     [ContainerTypes.Body]: {

@@ -1,6 +1,6 @@
 export enum BaseStatusEnum {
-    Active,
-    Passive
+    Passive,
+    Active
 }
 
 export enum MfaEnum {
