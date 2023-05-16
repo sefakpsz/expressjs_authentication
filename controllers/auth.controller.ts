@@ -226,17 +226,26 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
 
     const distinctiveCode = req.query.distinctiveCode
 
-    const userDistinctive = await userDistinctiveModel.find({ code: distinctiveCode, status: BaseStatusEnum.Active })
+    const userDistinctive = await userDistinctiveModel.findOne({ code: distinctiveCode, status: BaseStatusEnum.Active }).populate("user")
         .catch((error: Error) => {
             console.error(error.message)
             return res.status(HttpStatusCode.BadRequest).json(
                 errorResult(
                     null,
-                    messages.userDistinctive_couldnt_find
+                    messages.error
                 )
             )
         })
 
+    if (!userDistinctive)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(
+                null,
+                messages.userDistinctive_couldnt_find
+            )
+        )
+
+    const user = await userModel.findOne(userDistinctive.user)
     /*
     find user from securityCode
     and go to the mfa table to check provided mail code is equal with in db

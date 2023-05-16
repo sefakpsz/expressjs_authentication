@@ -1,12 +1,13 @@
+import { HttpStatusCode } from 'axios';
 import { NextFunction, Request, Response } from 'express';
+import { errorResult } from '../utils/constants/results'
+import messages from '../utils/constants/messages';
 
-export const notFoundError = (error: any, req: Request, res: Response, next: NextFunction) => {
-    console.log(`Error Message: ${error.message}`)
-    const status = error.status || 400
-
-    res.status(status).json({
-        errorMessage: error.message
-    })
+export const unknownError = (error: any, req: Request, res: Response, next: NextFunction) => {
+    console.error(error.message)
+    res.status(HttpStatusCode.BadRequest).json(
+        errorResult(null, messages.error)
+    )
 }
 
 export const validationError = (err: any, req: Request, res: Response, next: NextFunction) => {

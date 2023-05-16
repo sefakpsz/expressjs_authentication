@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-import { validationError, notFoundError } from './middlewares/error.middleware';
+import { validationError, unknownError } from './middlewares/error.middleware';
 import { verifyToken } from './middlewares/auth.middleware';
 
 import auth from './routes/auth.routes'
@@ -24,7 +24,7 @@ app.use('/card', card);
 app.use('/group', group);
 
 app.use(validationError);
-app.use(notFoundError);
+app.use(unknownError);
 app.use(verifyToken);
 
 app.listen(process.env.port, async () => {
