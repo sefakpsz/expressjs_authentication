@@ -29,12 +29,12 @@ export const Login = Joi.object({
     password: Joi.string().required(),
 });
 
-export const PasswordChange = Joi.object({
-    email: Joi.string().email().required(),
+export const ChangePassword = Joi.object({
+    token: Joi.string().required(),
     oldPassword: Joi.string().required(),
     newPassword: Joi.string().required(),
 });
 
-export const PasswordReset = Joi.object({
+export const ForgottenPassword = Joi.object({
     email: Joi.string().email().required()
 });

@@ -6,7 +6,7 @@ const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex')
 const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex')
 const encryptionAlgorithm = process.env.encryptionAlgorithm as string
 
-const createToken = (email: string, userId: string) => {
+export const createToken = (email: string, userId: string) => {
 
     const cipherUserId = createCipheriv(encryptionAlgorithm, payloadKey, payloadIv);
     const encryptedUserId = cipherUserId.update(userId, 'utf-8', 'hex') + cipherUserId.final('hex');
@@ -27,7 +27,7 @@ const createToken = (email: string, userId: string) => {
     return token;
 }
 
-const verifyToken = (token: string) => {
+export const verifyToken = (token: string) => {
 
     try {
         const decodedToken = verify(token, tokenKey) as { payload: string };

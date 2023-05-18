@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-import { login, logout, register, passwordChange, passwordReset, checkMfas } from '../controllers/auth.controller'
+import { login, logout, register, changePassword, forgottenPassword, checkMfas } from '../controllers/auth.controller'
 
-import { validator, Register, Login, PasswordChange, PasswordReset, CheckMfas } from '../validations/auth.validations';
+import { validator, Register, Login, ChangePassword, ForgottenPassword, CheckMfas } from '../validations/auth.validations';
 
 const router = Router();
 
@@ -17,8 +17,8 @@ router.get('/login', validator.query(Login), login);
 
 router.post('/logout', logout);
 
-router.post('/passwordChange', validator.query(PasswordChange), passwordChange);
+router.post('/passwordChange', validator.query(ChangePassword), changePassword);
 
-router.post('/passwordReset', validator.query(PasswordReset), passwordReset);
+router.post('/passwordReset', validator.query(ForgottenPassword), forgottenPassword);
 
 export default router;

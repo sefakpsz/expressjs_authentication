@@ -13,3 +13,8 @@ export enum MfaStatusEnum {
     Correct,
     Wrong
 }
+
+export enum PasswordChangeEnum {
+    Change,
+    Forgetten
+}

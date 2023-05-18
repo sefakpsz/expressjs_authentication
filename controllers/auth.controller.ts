@@ -11,6 +11,7 @@ import { randomBytes, randomInt } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
 import userMfaModel from '../models/userMfa';
+import { createToken, verifyToken } from '../utils/helpers/token.helper';
 
 //#region Logic of Auth
 /* 
@@ -41,15 +42,6 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     const password = req.body.password
 
     const user = await userModel.findOne({ email, status: BaseStatusEnum.Active })
-        .catch((error: Error) => {
-            console.error(error.message)
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(
-                    null,
-                    messages.user_couldnt_found
-                )
-            )
-        })
 
     if (!user)
         return res.status(HttpStatusCode.BadRequest).json(
@@ -60,14 +52,6 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
         )
 
     const passwordVerification = await verifyPasswordHash(password, user.passwordHash, user.passwordSalt)
-        .catch((error: Error) => {
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(
-                    null,
-                    error.message
-                )
-            )
-        })
 
     if (!passwordVerification)
         return res.status(HttpStatusCode.BadRequest).json(
@@ -83,16 +67,6 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     }
 
     await userDistinctiveModel.create(userDistinctiveData)
-        .catch((error: Error) => {
-            console.error(error.message)
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(
-                    null,
-                    messages.userDistinctive_add_failed
-                )
-            )
-        })
-
 
     const userMfas = await userMfaModel.findOne({ user: user._id })
 
@@ -107,7 +81,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     //It is not dynamic approach !!!
     userMfas?.mfaTypes.forEach(async mfa => {
         if (mfa.type === MfaEnum.Email) {
-            await sendEmailFunc(user.id, user.email, res)
+            await sendEmailFunc(user.email)
         }
         else if (mfa.type === MfaEnum.GoogleAuth) {
             // google auth implementation
@@ -122,7 +96,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     )
 }
 
-const sendEmailFunc = async (userId: string, userEmail: string, res: Response) => {
+const sendEmailFunc = async (userEmail: string) => {
     let emailCode = randomInt(100000, 999999)
 
     const date = new Date()
@@ -266,21 +240,18 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         // }
     })
 
-    //createToken(email,userId)
+    const token = createToken(user.email, user.id)
 
-    /*
-    find user from securityCode
-    and go to the mfa table to check provided mail code is equal with in db
-    if it does createToken (use token.helper.ts) and send to the user
-    if it doesn't save it password history table as fail try and send error
-    */
+    return res.status(HttpStatusCode.Ok).json(
+        successResult(token, messages.success)
+    )
 }
 
-export const passwordChange = (req: Request, res: Response, next: NextFunction) => {
+export const changePassword = (req: Request, res: Response, next: NextFunction) => {
     // enter email code, token, old&new password then and change password
 }
 
-export const passwordReset = (req: Request, res: Response, next: NextFunction) => {
+export const forgottenPassword = (req: Request, res: Response, next: NextFunction) => {
 
     /*
     get mail of user
