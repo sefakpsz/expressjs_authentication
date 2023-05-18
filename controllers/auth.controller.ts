@@ -245,12 +245,28 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
             )
         )
 
-    //CONTINUE FROM HERE
-    const mfaDataOfUser = await userMfaModel.aggregate([{
-        $match: {
-            "mfaTypes.type": MfaEnum.Email
+    const mfaDataOfUser = await userMfaModel.findOne(
+        {
+            user: user._id,
+            "mfaTypes.status": BaseStatusEnum.Active
         }
-    }])
+    )
+
+    mfaDataOfUser?.mfaTypes.forEach(mfaData => {
+        if (mfaData.type === MfaEnum.Email) {
+            if (mfaData.code !== emailCode) {
+                return res.status(HttpStatusCode.BadRequest).json(
+                    errorResult(null, messages.wrong_email_code)
+                )
+            }
+        }
+        // if google auth will be implemented
+        // if(mfaData.type === MfaEnum.GoogleAuth){
+        //     if(mfaData.code!==googleCode)
+        // }
+    })
+
+    //createToken(email,userId)
 
     /*
     find user from securityCode

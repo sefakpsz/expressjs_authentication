@@ -48,6 +48,10 @@ export default {
     userMfa_delete_failed: 'UserMfa deleting has failed!',
     userMfa_couldnt_found: "UserMfa couldn't found",
     //#endregion
+
+    //#region MFAs
+    wrong_email_code: 'Email Code is wrong!',
+    //#endregion
 }
 
 // success : 'Operation has succeeded!',

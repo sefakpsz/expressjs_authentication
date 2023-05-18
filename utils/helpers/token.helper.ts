@@ -1,18 +1,19 @@
 import { sign, verify } from 'jsonwebtoken'
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
 
-const tokenKey = Buffer.from(process.env.tokenKey as string, 'hex');
-const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex');
-const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex');
+const tokenKey = Buffer.from(process.env.tokenKey as string, 'hex')
+const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex')
+const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex')
+const encryptionAlgorithm = process.env.encryptionAlgorithm as string
 
 const createToken = (email: string, userId: string) => {
 
-    const cipherUserId = createCipheriv('aes256', payloadKey, payloadIv);
+    const cipherUserId = createCipheriv(encryptionAlgorithm, payloadKey, payloadIv);
     const encryptedUserId = cipherUserId.update(userId, 'utf-8', 'hex') + cipherUserId.final('hex');
 
     const payload = { email, userId: encryptedUserId }
 
-    const cipherPayload = createCipheriv('aes256', payloadKey, payloadIv);
+    const cipherPayload = createCipheriv(encryptionAlgorithm, payloadKey, payloadIv);
     const encryptedPayload = cipherPayload.update(JSON.stringify(payload), 'utf8', 'hex') + cipherPayload.final('hex');
 
     const token = sign(
@@ -31,7 +32,7 @@ const verifyToken = (token: string) => {
     try {
         const decodedToken = verify(token, tokenKey) as { payload: string };
 
-        const decipher = createDecipheriv('aes256', payloadKey, payloadIv);
+        const decipher = createDecipheriv(encryptionAlgorithm, payloadKey, payloadIv);
         const decryptedPayload = decipher.update(decodedToken.payload, 'hex', 'utf-8') + decipher.final('utf8');
 
         return { payload: decryptedPayload }
@@ -40,6 +41,12 @@ const verifyToken = (token: string) => {
         console.log("Invalid Token");
     }
 }
+
+/*
+payload= {
+
+}
+*/
 
 
 /*
