@@ -23,7 +23,9 @@ With help of distinctiveCode, user get mfa/mfas (which options are selected from
 User go to the getToken() type distinctiveCode-MFA code/codes
 
 if all of them true, user get his/her token
-and WRITE TRIGGER in the mongodb when expireDate is came status of distinctiveCode will be false!
+and 
+(use hooks for that reason https://mongoosejs.com/docs/middleware.html#post-async)
+WRITE TRIGGER in the mongodb when expireDate is came status of distinctiveCode will be false!
 
 JWT
 
