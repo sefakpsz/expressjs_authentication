@@ -11,7 +11,6 @@ import { randomBytes, randomInt } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
 import userMfaModel from '../models/userMfa';
-import mfaLogModel from '../models/mfaLog';
 
 //#region Logic of Auth
 /* 
@@ -24,6 +23,14 @@ User go to the getToken() type distinctiveCode-MFA code/codes
 
 if all of them true, user get his/her token
 and WRITE TRIGGER in the mongodb when expireDate is came status of distinctiveCode will be false!
+
+JWT
+
+- Keep a global list of JWTs that have been revoked before they expired (and remove the tokens after expiry). 
+    Instead of letting webservers hit a server to get this list, push the list to each server using a pub/sub mechanism.
+- Revoking tokens is important for security, but rare. Realistically this list is small and easily fits into memory. 
+    This largely solves the logout issue.
+
 
 */
 //#endregion
@@ -87,18 +94,9 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
         })
 
 
-    const userMfas = await userMfaModel.find({ user: user._id, status: BaseStatusEnum.Active })
-        .catch((error: Error) => {
-            console.error(error.message)
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(
-                    null,
-                    messages.userMfa_couldnt_found
-                )
-            )
-        })
+    const userMfas = await userMfaModel.findOne({ user: user._id })
 
-    if (userMfas.length === 0)
+    if (userMfas?.mfaTypes.length === 0)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(
                 null,
@@ -106,14 +104,15 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             )
         )
 
-    for (let mfa of userMfas) {
-        if (mfa.mfaType === MfaEnum.Email) {
+    //It is not dynamic approach !!!
+    userMfas?.mfaTypes.forEach(async mfa => {
+        if (mfa.type === MfaEnum.Email) {
             await sendEmailFunc(user.id, user.email, res)
         }
-        else if (mfa.mfaType === MfaEnum.GoogleAuth) {
+        else if (mfa.type === MfaEnum.GoogleAuth) {
             // google auth implementation
         }
-    }
+    })
 
     return res.status(HttpStatusCode.BadRequest).json(
         successResult(
@@ -126,23 +125,23 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 const sendEmailFunc = async (userId: string, userEmail: string, res: Response) => {
     let emailCode = randomInt(100000, 999999)
 
-    sendMail(userEmail, "Login", `Email Code: ${emailCode}`)
-    await mfaLogModel.create({
-        user: userId,
-        mfaType: MfaEnum.Email,
-        dioristicCode: emailCode,
-        status: MfaStatusEnum.NotUsed,
-        expireDate: new Date().getMinutes() + 3
-    })
-        .catch((error: Error) => {
-            console.error(error.message)
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(
-                    null,
-                    messages.userMfa_add_failed
-                )
-            )
-        })
+    const date = new Date()
+    await sendMail(userEmail, "Login", `Email Code: ${emailCode}`)
+    await userMfaModel.aggregate(
+        [
+            {
+                $match: {
+                    "mfa.name": MfaEnum.Email
+                }
+            },
+            {
+                $set: {
+                    "mfa.code": emailCode,
+                    "mfa.expireDate": date.setMinutes(date.getMinutes() + 5)
+                }
+            }
+        ]
+    )
 }
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
@@ -224,18 +223,9 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
 
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
 
-    const distinctiveCode = req.query.distinctiveCode
+    const { distinctiveCode, emailCode } = req.query
 
     const userDistinctive = await userDistinctiveModel.findOne({ code: distinctiveCode, status: BaseStatusEnum.Active }).populate("user")
-        .catch((error: Error) => {
-            console.error(error.message)
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(
-                    null,
-                    messages.error
-                )
-            )
-        })
 
     if (!userDistinctive)
         return res.status(HttpStatusCode.BadRequest).json(
@@ -246,6 +236,22 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         )
 
     const user = await userModel.findOne(userDistinctive.user)
+
+    if (!user)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(
+                null,
+                messages.user_couldnt_found
+            )
+        )
+
+    //CONTINUE FROM HERE
+    const mfaDataOfUser = await userMfaModel.aggregate([{
+        $match: {
+            "mfaTypes.type": MfaEnum.Email
+        }
+    }])
+
     /*
     find user from securityCode
     and go to the mfa table to check provided mail code is equal with in db

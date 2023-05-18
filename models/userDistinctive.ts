@@ -13,7 +13,8 @@ const userDistinctiveSchema = new Schema(
             required: true
         },
         status: {
-            type: BaseStatusEnum,
+            enum: BaseStatusEnum,
+            type: Number,
             required: true,
             default: BaseStatusEnum.Active
         }

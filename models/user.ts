@@ -34,7 +34,8 @@ const userSchema = new Schema(
             }
         ],
         status: {
-            type: BaseStatusEnum,
+            enum: BaseStatusEnum,
+            type: Number,
             required: true,
             default: BaseStatusEnum.Active
         }

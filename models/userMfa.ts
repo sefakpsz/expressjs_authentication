@@ -1,4 +1,4 @@
-import { Model, Schema, SchemaTypes } from 'mongoose'
+import { model, Schema, SchemaTypes } from 'mongoose'
 import { BaseStatusEnum, MfaEnum } from '../utils/constants/enums';
 
 const userMfaSchema = new Schema(
@@ -8,18 +8,30 @@ const userMfaSchema = new Schema(
             ref: 'User',
             required: true
         },
-        mfaType: {
-            type: MfaEnum,
-            required: true
-        },
-        status: {
-            type: BaseStatusEnum,
-            required: true,
-            default: BaseStatusEnum.Active
-        }
+        mfaTypes: [
+            {
+                type: {
+                    enum: MfaEnum,
+                    type: Number,
+                    required: true
+                },
+                code: {
+                    type: Number
+                },
+                expireDate: {
+                    type: Date
+                },
+                status: {
+                    enum: BaseStatusEnum,
+                    type: Number,
+                    required: true,
+                    default: BaseStatusEnum.Active
+                }
+            }
+        ],
     },
     {
         timestamps: true
     });
 
-export default new Model('UserMfa', userMfaSchema);
+export default model('UserMfa', userMfaSchema);
