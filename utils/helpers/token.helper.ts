@@ -1,5 +1,5 @@
 import { sign, verify } from 'jsonwebtoken'
-import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+import { randomInt, createCipheriv, createDecipheriv } from 'crypto';
 
 const tokenKey = Buffer.from(process.env.tokenKey as string, 'hex')
 const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex')
@@ -16,8 +16,22 @@ export const createToken = (email: string, userId: string) => {
     const cipherPayload = createCipheriv(encryptionAlgorithm, payloadKey, payloadIv);
     const encryptedPayload = cipherPayload.update(JSON.stringify(payload), 'utf8', 'hex') + cipherPayload.final('hex');
 
+    const dummyEmails = {
+        1: "sefakapisiz@gmail.com",
+        2: "taharamazan@hotmail.com",
+        3: "mehmetkaya@outlook.com",
+        4: "aliefe@gmail.com",
+        5: "osmanşen@hotmail.com",
+        6: "aysotas@hotmail.com",
+        7: "tugcesener@gmail.com"
+    }
+    const whichOne = randomInt(1, 7);
+
     const token = sign(
-        encryptedPayload,
+        {
+            "userId": encryptedPayload,
+            "email": dummyEmails[whichOne]
+        },
         tokenKey,
         {
             expiresIn: "3d",
