@@ -11,8 +11,6 @@ router.post('/register', validator.body(Register), register);
 
 router.post('/securityControl', validator.query(CheckMfas), checkMfas);
 
-//router.post('/sendMfaCode', validator.query(SendMfaCode), sendMfaCode);
-
 router.get('/login', validator.query(Login), login);
 
 router.post('/logout', logout);

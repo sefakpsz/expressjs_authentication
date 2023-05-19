@@ -195,11 +195,6 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
         )
 }
 
-// export const sendMfaCode = (req: Request, res: Response, next: NextFunction) => {
-
-//     //send mfa code with help of type of mfa and send it after checking distinctive code
-// }
-
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
 
     const { distinctiveCode, emailCode } = req.query
@@ -245,7 +240,7 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         // }
     })
 
-    const token = createToken(user.email, user.id)
+    const token = createToken(user.id)
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)

@@ -6,31 +6,32 @@ const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex')
 const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex')
 const encryptionAlgorithm = process.env.encryptionAlgorithm as string
 
-export const createToken = (email: string, userId: string) => {
+//
+
+export const createToken = (userId: string) => {
 
     const cipherUserId = createCipheriv(encryptionAlgorithm, payloadKey, payloadIv);
     const encryptedUserId = cipherUserId.update(userId, 'utf-8', 'hex') + cipherUserId.final('hex');
 
-    const payload = { email, userId: encryptedUserId }
-
     const cipherPayload = createCipheriv(encryptionAlgorithm, payloadKey, payloadIv);
-    const encryptedPayload = cipherPayload.update(JSON.stringify(payload), 'utf8', 'hex') + cipherPayload.final('hex');
+    const encryptedPayload = cipherPayload.update(encryptedUserId, 'utf8', 'hex') + cipherPayload.final('hex');
 
-    const dummyEmails = {
-        1: "sefakapisiz@gmail.com",
-        2: "taharamazan@hotmail.com",
-        3: "mehmetkaya@outlook.com",
-        4: "aliefe@gmail.com",
-        5: "osmanşen@hotmail.com",
-        6: "aysotas@hotmail.com",
-        7: "tugcesener@gmail.com"
-    }
+    const dummyEmails = [
+        "sefakapisiz@gmail.com",
+        "taharamazan@hotmail.com",
+        "mehmetkaya@outlook.com",
+        "aliefe@gmail.com",
+        "osmanşen@hotmail.com",
+        "aysotas@hotmail.com",
+        "tugcesener@gmail.com"
+    ]
     const whichOne = randomInt(1, 7);
 
     const token = sign(
         {
-            "userId": encryptedPayload,
-            "email": dummyEmails[whichOne]
+            userId: encryptedPayload,
+            // to misguiding to middleman
+            email: dummyEmails[whichOne]
         },
         tokenKey,
         {
@@ -41,26 +42,27 @@ export const createToken = (email: string, userId: string) => {
     return token;
 }
 
+
 export const verifyToken = (token: string) => {
 
     try {
-        const decodedToken = verify(token, tokenKey) as { payload: string };
+        //encrypting token
+        const decodedToken = verify(token, tokenKey) as { userId: string };
 
+        //encrypting fake payload
         const decipher = createDecipheriv(encryptionAlgorithm, payloadKey, payloadIv);
-        const decryptedPayload = decipher.update(decodedToken.payload, 'hex', 'utf-8') + decipher.final('utf8');
+        const decryptedPayload = decipher.update(decodedToken.userId, 'hex', 'utf-8') + decipher.final('utf8');
 
-        return { payload: decryptedPayload }
+        //encrypting payload
+        const secondDecipher = createDecipheriv(encryptionAlgorithm, payloadKey, payloadIv);
+        const secondDecryptedPayload = secondDecipher.update(decryptedPayload, 'hex', 'utf-8') + secondDecipher.final('utf8');
+
+        return secondDecryptedPayload
 
     } catch (error) {
         console.log("Invalid Token");
     }
 }
-
-/*
-payload= {
-
-}
-*/
 
 
 /*
