@@ -34,7 +34,10 @@ JWT
 - Revoking tokens is important for security, but rare. Realistically this list is small and easily fits into memory. 
     This largely solves the logout issue.
 
-
+ payload{
+    email: sefakapisiz@gmail.com,
+    userId: encryptedPayload
+ }
 */
 //#endregion
 
