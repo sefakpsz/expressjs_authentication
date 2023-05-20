@@ -18,6 +18,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+//Adding something is needed because i.e 1907/ is return error or something like that...
+
 app.use('/auth', auth);
 app.use('/board', board);
 app.use('/card', card);
