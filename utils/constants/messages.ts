@@ -2,6 +2,8 @@ export default {
     success: 'Operation has succeeded!',
     error: 'Operation has failed!',
 
+    unauthorized: '',
+
     //#region User Distinctive
     userDistinctive_add_failed: 'UserDistinctive adding has failed!',
     userDistinctive_update_failed: 'UserDistinctiveupdating has failed!',

@@ -249,6 +249,8 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
 
 export const changePassword = (req: Request, res: Response, next: NextFunction) => {
     // enter email code, token, old&new password then and change password
+
+
 }
 
 export const forgottenPassword = (req: Request, res: Response, next: NextFunction) => {
