@@ -64,7 +64,7 @@ export const verifyToken = (token: string) => {
     }
 }
 
-
+export default { verifyToken, createToken }
 /*
 
 userId decryption
