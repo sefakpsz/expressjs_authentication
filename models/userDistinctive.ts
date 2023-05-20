@@ -1,4 +1,4 @@
-import { Schema, SchemaTypes, Model } from 'mongoose'
+import { Schema, SchemaTypes, model } from 'mongoose'
 import { BaseStatusEnum } from '../utils/constants/enums';
 
 const userDistinctiveSchema = new Schema(
@@ -23,4 +23,4 @@ const userDistinctiveSchema = new Schema(
         timestamps: true
     });
 
-export default new Model('UserDistinctive', userDistinctiveSchema);
+export default model('UserDistinctive', userDistinctiveSchema);

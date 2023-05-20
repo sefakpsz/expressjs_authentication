@@ -128,7 +128,6 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
     /*
     via token go to user's token info and make expire prop to true and write current datetime to updatedAt
      */
-
 }
 
 export const register = async (req: ValidatedRequest<RegisterType>, res: Response, next: NextFunction) => {

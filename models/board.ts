@@ -1,4 +1,4 @@
-import { Schema, Model, SchemaTypes } from 'mongoose';
+import { Schema, model, SchemaTypes } from 'mongoose';
 import { BaseStatusEnum } from '../utils/constants/enums';
 
 const boardSchema = new Schema(
@@ -54,4 +54,4 @@ const boardSchema = new Schema(
         timestamps: true
     });
 
-export default new Model('Board', boardSchema);
+export default model('Board', boardSchema);
