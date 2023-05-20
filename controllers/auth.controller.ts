@@ -261,7 +261,11 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
             )
         )
 
-
+    const verificationOfOldPassword = await verifyPasswordHash(oldPassword, user.passwordHash, user.passwordSalt);
+    if (!verificationOfOldPassword)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.user_wrong_password) // could be old password is wrong
+        )
 }
 
 export const forgottenPassword = (req: Request, res: Response, next: NextFunction) => {
