@@ -247,8 +247,20 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
     )
 }
 
-export const changePassword = (req: Request, res: Response, next: NextFunction) => {
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
     // enter email code, token, old&new password then and change password
+    const { oldPassword, newPassword } = req.body
+    const { userId } = req.user
+
+    const user = await userModel.findById(userId)
+
+    if (!user)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(
+                null,
+                messages.user_couldnt_found
+            )
+        )
 
 
 }

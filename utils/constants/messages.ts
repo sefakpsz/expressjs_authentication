@@ -2,7 +2,10 @@ export default {
     success: 'Operation has succeeded!',
     error: 'Operation has failed!',
 
-    unauthorized: '',
+    //#region Authentication
+    token_missing: 'Token is missing!',
+    token_invalid: 'Invalid Token!',
+    //#endregion
 
     //#region User Distinctive
     userDistinctive_add_failed: 'UserDistinctive adding has failed!',
