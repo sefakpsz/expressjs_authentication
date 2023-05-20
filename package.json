@@ -1,14 +1,13 @@
 {
-  "name": "todo-web-api",
+  "name": "msk-board-app",
   "version": "1.0.0",
   "description": "",
   "main": "app.ts",
   "scripts": {
     "start": "ts-node app.ts",
-    "dev": "ts-node-dev app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node-dev app.ts"
   },
-  "repository": "todo-web-api",
+  "repository": "msk-board-app",
   "author": "sefakapisiz",
   "license": "MIT",
   "dependencies": {
