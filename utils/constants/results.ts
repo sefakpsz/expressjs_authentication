@@ -3,7 +3,7 @@ import express from 'express'
 
 const res = express.response;
 
-export const successResult = (data: object | string | null, message: string) => {
+export const successResult = (data: object | string | number | null, message: string) => {
     res.json({
         success: true,
         data,
@@ -11,7 +11,7 @@ export const successResult = (data: object | string | null, message: string) => 
     })
 }
 
-export const errorResult = (data: object | string | null, message: string) => {
+export const errorResult = (data: object | string | number | null, message: string) => {
     res.json({
         success: false,
         data,

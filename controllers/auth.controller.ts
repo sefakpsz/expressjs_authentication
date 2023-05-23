@@ -6,7 +6,7 @@ import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
 import messages from '../utils/constants/messages'
 import userModel from '../models/user'
-import { CheckMfas, LoginType, RegisterType } from '../types/auth.types';
+import { CheckMfas, LoginType, RegisterType, ResetPassword, SendMailResetPass } from '../types/auth.types';
 import { randomBytes, randomInt } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
@@ -86,7 +86,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     //It is not dynamic approach !!!
     userMfas?.mfaTypes.forEach(async mfa => {
         if (mfa.type === MfaEnum.Email) {
-            await sendEmailFunc(user.email)
+            await sendEmailFunc(user.email, "Login")
         }
         else if (mfa.type === MfaEnum.GoogleAuth) {
             // google auth implementation
@@ -101,11 +101,11 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     )
 }
 
-const sendEmailFunc = async (userEmail: string) => {
+const sendEmailFunc = async (userEmail: string, subject: string) => {
     let emailCode = randomInt(100000, 999999)
 
     const date = new Date()
-    await sendMail(userEmail, "Login", `Email Code: ${emailCode}`)
+    await sendMail(userEmail, subject, `Email Code: ${emailCode}`)
     await userMfaModel.aggregate(
         [
             {
@@ -121,6 +121,8 @@ const sendEmailFunc = async (userEmail: string) => {
             }
         ]
     )
+
+    return { emailCode }
 }
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
@@ -167,7 +169,7 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
                 );
         });
 
-    const distinctiveCode = randomBytes(4).toString('hex');
+    const distinctiveCode = createDistinctiveCode();
 
     const distinctiveData = {
         user: user.id,
@@ -192,6 +194,10 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
         .json(
             successResult(distinctiveCode, messages.success)
         )
+}
+
+const createDistinctiveCode = async () => {
+    return randomBytes(4).toString('hex');
 }
 
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
@@ -231,6 +237,10 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
                 return res.status(HttpStatusCode.BadRequest).json(
                     errorResult(null, messages.wrong_email_code)
                 )
+            } else if (mfaData.expireDate?.getMilliseconds() as number <= new Date().getMilliseconds()) {
+                return res.status(HttpStatusCode.BadRequest).json(
+                    errorResult(null, messages.expired_email_code)
+                )
             }
         }
         // if google auth will be implemented
@@ -240,6 +250,7 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
     })
 
     const token = createToken(user.id)
+    await userDistinctiveModel.updateOne({ _id: userDistinctive.id }, { code: "" })
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)
@@ -248,6 +259,9 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
 
 export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
     // enter email code, token, old&new password then and change password
+
+    // token has to be for this scenerio
+
     const { oldPassword, newPassword } = req.body
     const { userId } = req.user
 
@@ -281,7 +295,23 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     )
 }
 
-export const forgottenPassword = (req: Request, res: Response, next: NextFunction) => {
+export const resetPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
+
+    const { distinctiveCode, emailCode, newPassword } = req.body
+
+    const userDistinctiveData = await userDistinctiveModel.findOne({ code: distinctiveCode })
+    if (!userDistinctiveData)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.userDistinctive_code_wrong)
+        )
+
+    const userMfaData = await userMfaModel.findOne({ user: userDistinctiveData.user })
+    if (!userMfaData)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.userMfa_couldnt_found)
+        )
+
+    if (userMfaData.mfaTypes.includes())
 
     /*
     get mail of user
@@ -289,4 +319,30 @@ export const forgottenPassword = (req: Request, res: Response, next: NextFunctio
     and then with mail code, email and password reset to password
     */
 
+}
+
+export const sendMailResetPass = async (req: ValidatedRequest<SendMailResetPass>, res: Response, next: NextFunction) => {
+
+    const { email } = req.query
+
+    const user = await userModel.findOne({ email })
+
+    if (!user)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.user_couldnt_found)
+        )
+
+    const emailData = await sendEmailFunc(email, "Password Resetting")
+
+    const distinctiveCode = await createDistinctiveCode()
+
+    await userDistinctiveModel.create({
+        user: user,
+        code: distinctiveCode,
+    })
+
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult(emailData.emailCode, messages.success)
+    )
 }

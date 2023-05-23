@@ -12,6 +12,7 @@ export default {
     userDistinctive_update_failed: 'UserDistinctiveupdating has failed!',
     userDistinctive_delete_failed: 'UserDistinctive deleting has failed!',
     userDistinctive_couldnt_find: "UserDistinctive couldn't find!",
+    userDistinctive_code_wrong: "UserDistinctive code is wrong!",
     //#endregion
 
     //#region User
@@ -57,6 +58,7 @@ export default {
 
     //#region MFAs
     wrong_email_code: 'Email Code is wrong!',
+    expired_email_code: "Email Code has expired!"
     //#endregion
 }
 

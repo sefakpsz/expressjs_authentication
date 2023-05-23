@@ -23,6 +23,20 @@ export interface CheckMfas extends ValidatedRequestSchema {
     };
 }
 
+export interface ResetPassword extends ValidatedRequestSchema {
+    [ContainerTypes.Body]: {
+        distinctiveCode: string,
+        emailCode: Number,
+        newPassword: string
+    };
+}
+
+export interface SendMailResetPass extends ValidatedRequestSchema {
+    [ContainerTypes.Query]: {
+        email: string
+    };
+}
+
 //ask it to osman
 // export interface RegisterType extends ValidatedRequestSchema {
 //     [ContainerTypes.Body]: {
