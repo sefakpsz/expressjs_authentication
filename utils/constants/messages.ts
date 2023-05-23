@@ -20,7 +20,8 @@ export default {
     user_delete_failed: 'User deleting has failed!',
     user_already_exists: 'User already exists!',
     user_couldnt_found: "User couldn't find",
-    user_wrong_password: "Provided password is not true!",
+    user_wrong_password: "Password is wrong!",
+    user_same_password: "New password can't be same with new one!",
     //#endregion
 
     //#region Board

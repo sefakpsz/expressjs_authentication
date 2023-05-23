@@ -264,8 +264,21 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     const verificationOfOldPassword = await verifyPasswordHash(oldPassword, user.passwordHash, user.passwordSalt);
     if (!verificationOfOldPassword)
         return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.user_wrong_password) // could be old password is wrong
+            errorResult(null, messages.user_wrong_password)
         )
+
+    const { hash, salt } = await createPasswordHash(newPassword)
+
+    if (hash === user.passwordHash)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.user_same_password)
+        )
+
+    await userModel.updateOne({ _id: user.id }, { passwordHash: hash, passwordSalt: salt })
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult(null, messages.success)
+    )
 }
 
 export const forgottenPassword = (req: Request, res: Response, next: NextFunction) => {
