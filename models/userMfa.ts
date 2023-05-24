@@ -19,7 +19,8 @@ const userMfaSchema = new Schema(
                     type: Number
                 },
                 expireDate: {
-                    type: Date
+                    type: Number,
+                    default: 0
                 },
                 status: {
                     enum: BaseStatusEnum,

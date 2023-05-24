@@ -23,6 +23,7 @@ export default {
     user_couldnt_found: "User couldn't find",
     user_wrong_password: "Password is wrong!",
     user_same_password: "New password can't be same with new one!",
+    user_password_updated: "User password has updated!",
     //#endregion
 
     //#region Board

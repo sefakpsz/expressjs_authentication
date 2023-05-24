@@ -126,6 +126,7 @@ const sendEmailFunc = async (userEmail: string, subject: string) => {
 }
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
+    // AFTER FINISHING REDIS TOKEN SIDE
 
     /*
     via token go to user's token info and make expire prop to true and write current datetime to updatedAt
@@ -237,7 +238,7 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
                 return res.status(HttpStatusCode.BadRequest).json(
                     errorResult(null, messages.wrong_email_code)
                 )
-            } else if (mfaData.expireDate?.getMilliseconds() as number <= new Date().getMilliseconds()) {
+            } else if (mfaData.expireDate <= new Date().getMilliseconds()) {
                 return res.status(HttpStatusCode.BadRequest).json(
                     errorResult(null, messages.expired_email_code)
                 )
@@ -305,20 +306,41 @@ export const resetPassword = async (req: ValidatedRequest<ResetPassword>, res: R
             errorResult(null, messages.userDistinctive_code_wrong)
         )
 
-    const userMfaData = await userMfaModel.findOne({ user: userDistinctiveData.user })
+    const user = await userModel.findById(userDistinctiveData.user)
+
+    if (!user)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.user_couldnt_found)
+        )
+
+    const userMfaData = await userMfaModel.findOne({ user })
     if (!userMfaData)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(null, messages.userMfa_couldnt_found)
         )
 
-    if (userMfaData.mfaTypes.includes())
+    // with a loop make here dynamic, and don't forget to user prop of status
+    if (userMfaData.mfaTypes[0].expireDate < Date.now())
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.expired_email_code)
+        )
+    else if (userMfaData.mfaTypes[0].code !== emailCode)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.wrong_email_code)
+        )
 
-    /*
-    get mail of user
-    send mailCode to user via e-mail authorize to user
-    and then with mail code, email and password reset to password
-    */
+    const { hash, salt } = await createPasswordHash(newPassword)
 
+    if (hash === user.passwordHash)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.user_same_password)
+        )
+
+    await userModel.updateOne({ _id: user.id }, { passwordHash: hash, passwordSalt: salt })
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult(true, messages.user_password_updated)
+    )
 }
 
 export const sendMailResetPass = async (req: ValidatedRequest<SendMailResetPass>, res: Response, next: NextFunction) => {
@@ -343,6 +365,6 @@ export const sendMailResetPass = async (req: ValidatedRequest<SendMailResetPass>
 
 
     return res.status(HttpStatusCode.Ok).json(
-        successResult(emailData.emailCode, messages.success)
+        successResult(distinctiveCode, messages.success)
     )
 }
