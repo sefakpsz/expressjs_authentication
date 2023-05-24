@@ -28,7 +28,7 @@ Trace:
 
 npm manifest: 
   {
-    "name": "todo-web-api",
+    "name": "msk-board-app",
     "version": "1.0.0",
     "description": "",
     "main": "app.ts",
@@ -37,7 +37,7 @@ npm manifest:
       "dev": "ts-node-dev app.ts",
       "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "repository": "todo-web-api",
+    "repository": "msk-board-app",
     "author": "sefakapisiz",
     "license": "MIT",
     "dependencies": {
