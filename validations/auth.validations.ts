@@ -35,6 +35,6 @@ export const ChangePassword = Joi.object({
     newPassword: Joi.string().required(),
 });
 
-export const ForgottenPassword = Joi.object({
+export const ResetPassword = Joi.object({
     email: Joi.string().email().required()
 });

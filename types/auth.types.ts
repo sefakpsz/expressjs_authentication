@@ -8,7 +8,7 @@ export interface LoginType extends ValidatedRequestSchema {
 }
 
 export interface RegisterType extends ValidatedRequestSchema {
-    [ContainerTypes.Body]: {
+    [ContainerTypes.Query]: {
         email: string;
         password: string;
         name: string;

@@ -135,70 +135,47 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
 export const register = async (req: ValidatedRequest<RegisterType>, res: Response, next: NextFunction) => {
 
-    const isEmailExists = await userModel.findOne({ email: req.body.email, status: true }).exec();
+    const { email, password, name, surname } = req.query
 
+    const isEmailExists = await userModel.findOne({ email, status: true })
     if (isEmailExists)
         return res
             .status(HttpStatusCode.BadRequest)
             .json(errorResult(null, messages.user_already_exists))
 
-    const password = req.body.password;
     const passwordHashAndSalt = await createPasswordHash(password);
 
     const user = {
         id: "",
-        email: req.body.email,
+        email,
         passwordHash: passwordHashAndSalt.hash,
         passwordSalt: passwordHashAndSalt.salt,
-        name: req.body.name,
-        surname: req.body.surname
+        name,
+        surname
     }
 
     await userModel.create(user)
         .then(data => {
             user.id = data.id;
         })
-        .catch(error => {
-            console.error(error);
-            return res
-                .status(HttpStatusCode.BadRequest)
-                .json(
-                    errorResult(
-                        null,
-                        messages.user_add_failed
-                    )
-                );
-        });
 
-    const distinctiveCode = createDistinctiveCode();
-
+    const distinctiveCode = await createDistinctiveCode();
     const distinctiveData = {
         user: user.id,
         code: distinctiveCode
     }
 
     await userDistinctiveModel.create(distinctiveData)
-        .catch((error: Error) => {
-            console.error(error);
-            return res
-                .status(HttpStatusCode.BadRequest)
-                .json(
-                    errorResult(
-                        null,
-                        messages.userDistinctive_add_failed
-                    )
-                )
-        })
 
     return res
         .status(HttpStatusCode.Ok)
         .json(
-            successResult(distinctiveCode, messages.success)
+            successResult({ distinctiveCode }, messages.success)
         )
 }
 
 const createDistinctiveCode = async () => {
-    return randomBytes(4).toString('hex');
+    return randomBytes(5).toString('hex');
 }
 
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
