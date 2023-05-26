@@ -16,7 +16,8 @@ const userMfaSchema = new Schema(
                     required: true
                 },
                 code: {
-                    type: Number
+                    type: Number,
+                    default: 0
                 },
                 expireDate: {
                     type: Number,

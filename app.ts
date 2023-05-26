@@ -27,7 +27,7 @@ app.use('/group', group);
 
 app.use(validationError);
 app.use(unknownError);
-app.use(verifyToken);
+//app.use(verifyToken);
 
 app.listen(process.env.port, async () => {
     await connectToDb()

@@ -43,8 +43,8 @@ JWT
 
 export const login = async (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
 
-    const email = req.body.email
-    const password = req.body.password
+    const email = req.query.email
+    const password = req.query.password
 
     const user = await userModel.findOne({ email, status: BaseStatusEnum.Active })
 
@@ -71,7 +71,11 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
         code: randomBytes(4).toString("hex")
     }
 
-    await userDistinctiveModel.create(userDistinctiveData)
+    const userDistinctiveFromDb = await userDistinctiveModel.findOne({ user: user.id })
+    if (userDistinctiveFromDb)
+        await userDistinctiveModel.updateOne({ _id: userDistinctiveFromDb.id }, { code: userDistinctiveData.code })
+    else
+        await userDistinctiveModel.create(userDistinctiveData)
 
     const userMfas = await userMfaModel.findOne({ user: user._id })
 
@@ -95,7 +99,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 
     return res.status(HttpStatusCode.BadRequest).json(
         successResult(
-            userDistinctiveData.code,
+            { DistinctiveCode: userDistinctiveData.code },
             messages.success
         )
     )
@@ -103,6 +107,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 
 const sendEmailFunc = async (userEmail: string, subject: string) => {
     let emailCode = randomInt(100000, 999999)
+    console.log("sent email");
 
     const date = new Date()
     await sendMail(userEmail, subject, `Email Code: ${emailCode}`)
@@ -110,13 +115,13 @@ const sendEmailFunc = async (userEmail: string, subject: string) => {
         [
             {
                 $match: {
-                    "mfa.name": MfaEnum.Email
+                    "user": userEmail
                 }
             },
             {
                 $set: {
-                    "mfa.code": emailCode,
-                    "mfa.expireDate": date.setMinutes(date.getMinutes() + 5)
+                    "mfaTypes.code": emailCode,
+                    "mfaTypes.expireDate": date.setMinutes(date.getMinutes() + 5)
                 }
             }
         ]
@@ -159,18 +164,16 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
             user.id = data.id;
         })
 
-    const distinctiveCode = await createDistinctiveCode();
-    const distinctiveData = {
-        user: user.id,
-        code: distinctiveCode
-    }
 
-    await userDistinctiveModel.create(distinctiveData)
+    await userMfaModel.create({
+        user: user.id,
+        mfaTypes: [{ type: MfaEnum.Email }]
+    })
 
     return res
         .status(HttpStatusCode.Ok)
         .json(
-            successResult({ distinctiveCode }, messages.success)
+            successResult(true, messages.success)
         )
 }
 

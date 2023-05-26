@@ -1,7 +1,7 @@
 import { ValidatedRequestSchema, ContainerTypes } from 'express-joi-validation'
 
 export interface LoginType extends ValidatedRequestSchema {
-    [ContainerTypes.Body]: {
+    [ContainerTypes.Query]: {
         email: string;
         password: string;
     };
