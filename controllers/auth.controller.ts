@@ -12,6 +12,7 @@ import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums
 import userDistinctiveModel from '../models/userDistinctive';
 import userMfaModel from '../models/userMfa';
 import { createToken, verifyToken } from '../utils/helpers/token.helper';
+import { Types } from 'mongoose';
 
 //#region Logic of Auth
 /* 
@@ -90,7 +91,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     //It is not dynamic approach !!!
     userMfas?.mfaTypes.forEach(async mfa => {
         if (mfa.type === MfaEnum.Email) {
-            await sendEmailFunc(user.email, "Login")
+            await sendEmailFunc(user.id, user.email, "Login")
         }
         else if (mfa.type === MfaEnum.GoogleAuth) {
             // google auth implementation
@@ -105,26 +106,22 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     )
 }
 
-const sendEmailFunc = async (userEmail: string, subject: string) => {
+const sendEmailFunc = async (userId: string, email: string, subject: string) => {
     let emailCode = randomInt(100000, 999999)
-    console.log("sent email");
 
     const date = new Date()
-    await sendMail(userEmail, subject, `Email Code: ${emailCode}`)
-    await userMfaModel.aggregate(
-        [
-            {
-                $match: {
-                    "user": userEmail
-                }
+    await sendMail(email, subject, `Email Code: ${emailCode}`)
+    const thing = await userMfaModel.updateOne(
+        {
+            user: new Types.ObjectId(userId),
+            "mfaTypes.type": MfaEnum.Email,
+        },
+        {
+            $set: {
+                "mfaTypes.$.code": emailCode,
+                "mfaTypes.$.expireDate": date.setMinutes(date.getMinutes() + 5)
             },
-            {
-                $set: {
-                    "mfaTypes.code": emailCode,
-                    "mfaTypes.expireDate": date.setMinutes(date.getMinutes() + 5)
-                }
-            }
-        ]
+        },
     )
 
     return { emailCode }
@@ -212,8 +209,15 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         }
     )
 
-    mfaDataOfUser?.mfaTypes.forEach(mfaData => {
+    if (!mfaDataOfUser)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.userMfa_couldnt_found)
+        )
+
+    for (let mfaData of mfaDataOfUser?.mfaTypes) {
         if (mfaData.type === MfaEnum.Email) {
+            console.log(mfaData.code, emailCode)
+            console.log(mfaData.expireDate, new Date().getMilliseconds())
             if (mfaData.code !== emailCode) {
                 return res.status(HttpStatusCode.BadRequest).json(
                     errorResult(null, messages.wrong_email_code)
@@ -228,10 +232,11 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         // if(mfaData.type === MfaEnum.GoogleAuth){
         //     if(mfaData.code!==googleCode)
         // }
-    })
+    }
 
     const token = createToken(user.id)
     await userDistinctiveModel.updateOne({ _id: userDistinctive.id }, { code: "" })
+    // maybe email code and expire code could make empty
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)
@@ -334,7 +339,7 @@ export const sendMailResetPass = async (req: ValidatedRequest<SendMailResetPass>
             errorResult(null, messages.user_couldnt_found)
         )
 
-    const emailData = await sendEmailFunc(email, "Password Resetting")
+    const emailData = await sendEmailFunc(user.id, email, "Password Resetting")
 
     const distinctiveCode = await createDistinctiveCode()
 

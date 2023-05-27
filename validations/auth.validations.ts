@@ -17,7 +17,7 @@ export const Register = Joi.object({
 
 export const CheckMfas = Joi.object({
     distinctiveCode: Joi.string().required(),
-    //check distinctive code and MFAs
+    emailCode: Joi.string().required()
 });
 
 export const SendMfaCode = Joi.object({
