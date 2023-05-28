@@ -11,7 +11,7 @@ const use = (fn: any) => (req: Request, res: Response, next: NextFunction) => Pr
 //ASK OSMAN TO USAGE OF BODY INSTEAD OF QUERY
 router.post('/register', validator.query(Register), use(register));
 
-router.get('/checkMfas', validator.query(CheckMfas), checkMfas);
+router.get('/checkMfas', validator.query(CheckMfas), use(checkMfas));
 
 router.get('/login', validator.query(Login), login);
 

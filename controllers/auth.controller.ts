@@ -111,7 +111,7 @@ const sendEmailFunc = async (userId: string, email: string, subject: string) => 
 
     const date = new Date()
     await sendMail(email, subject, `Email Code: ${emailCode}`)
-    const thing = await userMfaModel.updateOne(
+    await userMfaModel.updateOne(
         {
             user: new Types.ObjectId(userId),
             "mfaTypes.type": MfaEnum.Email,
@@ -179,7 +179,6 @@ const createDistinctiveCode = async () => {
 }
 
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
-
     const { distinctiveCode, emailCode } = req.query
 
     const userDistinctive = await userDistinctiveModel.findOne({ code: distinctiveCode, status: BaseStatusEnum.Active }).populate("user")
@@ -216,27 +215,27 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
 
     for (let mfaData of mfaDataOfUser?.mfaTypes) {
         if (mfaData.type === MfaEnum.Email) {
-            console.log(mfaData.code, emailCode)
-            console.log(mfaData.expireDate, new Date().getMilliseconds())
-            if (mfaData.code !== emailCode) {
+            if (mfaData.code.toString() !== emailCode.toString()) {
                 return res.status(HttpStatusCode.BadRequest).json(
                     errorResult(null, messages.wrong_email_code)
                 )
-            } else if (mfaData.expireDate <= new Date().getMilliseconds()) {
+            } else if (mfaData.expireDate <= Date.now()) {
                 return res.status(HttpStatusCode.BadRequest).json(
                     errorResult(null, messages.expired_email_code)
                 )
             }
+            mfaData.code = 0
+            mfaData.expireDate = 0
         }
         // if google auth will be implemented
         // if(mfaData.type === MfaEnum.GoogleAuth){
         //     if(mfaData.code!==googleCode)
         // }
     }
+    await mfaDataOfUser.save();
 
     const token = createToken(user.id)
     await userDistinctiveModel.updateOne({ _id: userDistinctive.id }, { code: "" })
-    // maybe email code and expire code could make empty
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)
