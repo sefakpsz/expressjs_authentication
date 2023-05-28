@@ -14,6 +14,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
 
     try {
         const decoded = tokenHelper.verifyToken(token);
+        console.log(decoded)
         req.user.userId = parseInt(decoded as string)
     } catch {
         return res.status(HttpStatusCode.Unauthorized).json(

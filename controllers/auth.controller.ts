@@ -235,6 +235,7 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
     await mfaDataOfUser.save();
 
     const token = createToken(user.id)
+    req.headers["authorization"] = token
     await userDistinctiveModel.updateOne({ _id: userDistinctive.id }, { code: "" })
 
     return res.status(HttpStatusCode.Ok).json(

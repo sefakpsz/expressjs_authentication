@@ -1,17 +1,16 @@
 import { createTransport } from 'nodemailer';
 
-// mailHost = smtp.office365.com
-// mailPort = 587
 // mailUser = testsefakapisiz@outlook.com
-// mailPassword = sefa1907
 
 let transporterConfig = {
     host: "smtp.office365.com",
+    //host: "smtp-mail.outlook.com"
     port: 587,
     secure: false,
     auth: {
-        user: "testsefakapisiz@outlook.com",
-        pass: "sefa1907"
+        user: "teamofmsk@outlook.com",
+        //user: "testsefakapisiz@outlook.com"
+        pass: "Sefa1907"
     }
 }
 
@@ -19,7 +18,7 @@ let transporter = createTransport(transporterConfig);
 
 export const sendMail = async (to: string, subject: string, text: string, code?: string) => {
     let mailOptions = {
-        from: 'MSK',
+        from: "teamofmsk@outlook.com",
         to,
         subject,
         text
