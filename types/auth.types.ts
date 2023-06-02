@@ -31,9 +31,11 @@ export interface ResetPassword extends ValidatedRequestSchema {
     };
 }
 
-export interface SendMailResetPass extends ValidatedRequestSchema {
+export interface CheckMfasPass extends ValidatedRequestSchema {
     [ContainerTypes.Query]: {
-        email: string
+        distinctiveCode: string,
+        emailCode: string,
+        newPassword: string
     };
 }
 

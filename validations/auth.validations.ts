@@ -20,6 +20,11 @@ export const CheckMfas = Joi.object({
     emailCode: Joi.string().required()
 });
 
+export const CheckMfasPass = Joi.object({
+    distinctiveCode: Joi.string().required(),
+    emailCode: Joi.string().required()
+});
+
 export const SendMfaCode = Joi.object({
     code: Joi.string().required()
 });
@@ -35,6 +40,6 @@ export const ChangePassword = Joi.object({
     newPassword: Joi.string().required(),
 });
 
-export const ResetPassword = Joi.object({
+export const ForgotPassword = Joi.object({
     email: Joi.string().email().required()
 });

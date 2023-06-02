@@ -6,7 +6,7 @@ import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
 import messages from '../utils/constants/messages'
 import userModel from '../models/user'
-import { CheckMfas, LoginType, RegisterType, ResetPassword, SendMailResetPass } from '../types/auth.types';
+import { CheckMfas, LoginType, RegisterType, ResetPassword, CheckMfasPass } from '../types/auth.types';
 import { randomBytes, randomInt } from 'crypto';
 import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
 import userDistinctiveModel from '../models/userDistinctive';
@@ -328,7 +328,7 @@ export const resetPassword = async (req: ValidatedRequest<ResetPassword>, res: R
     )
 }
 
-export const sendMailResetPass = async (req: ValidatedRequest<SendMailResetPass>, res: Response, next: NextFunction) => {
+export const checkMfasPass = async (req: ValidatedRequest<CheckMfasPass>, res: Response, next: NextFunction) => {
 
     const { email } = req.query
 
