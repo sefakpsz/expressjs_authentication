@@ -5,8 +5,8 @@ import messages from '../utils/constants/messages'
 import tokenHelper from '../utils/helpers/token.helper';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers["authorization"] as string;
-    console.log(token.split(" ")[1])
+    const token = req.headers["authorization"]?.split(" ")[1] as string;
+
     if (!token)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(null, messages.token_missing)
