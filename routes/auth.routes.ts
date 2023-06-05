@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express'
 
-import { login, logout, register, changePassword, resetPassword, checkMfas, checkMfasPass } from '../controllers/auth.controller'
+import { login, logout, register, changePassword, forgotPassword, checkMfas, sendEmailPass } from '../controllers/auth.controller'
 
-import { validator, Register, Login, ChangePassword, ForgotPassword, CheckMfas, CheckMfasPass } from '../validations/auth.validations';
+import { validator, Register, Login, ChangePassword, ForgotPassword, CheckMfas, SendEmailPass } from '../validations/auth.validations';
 
 const router = Router();
 
@@ -12,7 +12,7 @@ router.post('/register', validator.query(Register), use(register));
 
 router.get('/checkMfas', validator.query(CheckMfas), use(checkMfas));
 
-router.get('/checkMfasPass', validator.query(CheckMfasPass), use(checkMfasPass));
+router.get('/sendEmailPass', validator.query(SendEmailPass), use(sendEmailPass));
 
 router.get('/login', validator.query(Login), use(login));
 
@@ -20,6 +20,6 @@ router.post('/logout', use(logout));
 
 router.post('/passwordChange', validator.query(ChangePassword), use(changePassword));
 
-router.post('/passwordForgot', validator.query(ForgotPassword), use(resetPassword));
+router.post('/passwordForgot', validator.query(ForgotPassword), use(forgotPassword));
 
 export default router;

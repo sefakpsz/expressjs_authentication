@@ -69,12 +69,14 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 
     const userDistinctiveData = {
         user,
-        code: randomBytes(4).toString("hex")
+        code: randomBytes(4).toString("hex"),
+        expireDate: new Date().setMinutes(new Date().getMinutes() + 5)
     }
 
     const userDistinctiveFromDb = await userDistinctiveModel.findOne({ user: user.id })
+    console.log(userDistinctiveFromDb)
     if (userDistinctiveFromDb)
-        await userDistinctiveModel.updateOne({ _id: userDistinctiveFromDb.id }, { code: userDistinctiveData.code })
+        await userDistinctiveModel.updateOne({ _id: userDistinctiveFromDb.id }, { code: userDistinctiveData.code, expireDate: userDistinctiveData.expireDate })
     else
         await userDistinctiveModel.create(userDistinctiveData)
 
@@ -191,6 +193,11 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
             )
         )
 
+    if (userDistinctive.expireDate < Date.now())
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.expired_distinctive_code)
+        )
+
     const user = await userModel.findOne(userDistinctive.user)
 
     if (!user)
@@ -235,8 +242,6 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
     await mfaDataOfUser.save();
 
     const token = createToken(user.id)
-    req.headers["authorization"] = token
-    await userDistinctiveModel.updateOne({ _id: userDistinctive.id }, { code: "" })
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)
@@ -281,14 +286,20 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     )
 }
 
-export const resetPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
+export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
 
-    const { distinctiveCode, emailCode, newPassword } = req.body
+    const { distinctiveCode, emailCode, newPassword } = req.query
+    console.log(distinctiveCode);
 
     const userDistinctiveData = await userDistinctiveModel.findOne({ code: distinctiveCode })
     if (!userDistinctiveData)
         return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.userDistinctive_code_wrong)
+            errorResult(null, messages.userDistinctive_couldnt_find)
+        )
+
+    if (userDistinctiveData.expireDate < Date.now())
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, messages.expired_distinctive_code)
         )
 
     const user = await userModel.findById(userDistinctiveData.user)
@@ -328,7 +339,7 @@ export const resetPassword = async (req: ValidatedRequest<ResetPassword>, res: R
     )
 }
 
-export const checkMfasPass = async (req: ValidatedRequest<CheckMfasPass>, res: Response, next: NextFunction) => {
+export const sendEmailPass = async (req: ValidatedRequest<CheckMfasPass>, res: Response, next: NextFunction) => {
 
     const { email } = req.query
 
@@ -339,15 +350,14 @@ export const checkMfasPass = async (req: ValidatedRequest<CheckMfasPass>, res: R
             errorResult(null, messages.user_couldnt_found)
         )
 
-    const emailData = await sendEmailFunc(user.id, email, "Password Resetting")
+    const emailData = await sendEmailFunc(user.id, email as string, "Forgetten Password")
 
     const distinctiveCode = await createDistinctiveCode()
 
-    await userDistinctiveModel.create({
-        user: user,
-        code: distinctiveCode,
-    })
-
+    await userDistinctiveModel.updateOne(
+        { user },
+        { code: distinctiveCode }
+    )
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(distinctiveCode, messages.success)

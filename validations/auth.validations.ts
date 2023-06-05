@@ -20,9 +20,8 @@ export const CheckMfas = Joi.object({
     emailCode: Joi.string().required()
 });
 
-export const CheckMfasPass = Joi.object({
-    distinctiveCode: Joi.string().required(),
-    emailCode: Joi.string().required()
+export const SendEmailPass = Joi.object({
+    email: Joi.string().email().required()
 });
 
 export const SendMfaCode = Joi.object({
@@ -35,11 +34,12 @@ export const Login = Joi.object({
 });
 
 export const ChangePassword = Joi.object({
-    token: Joi.string().required(),
     oldPassword: Joi.string().required(),
     newPassword: Joi.string().required(),
 });
 
 export const ForgotPassword = Joi.object({
-    email: Joi.string().email().required()
+    distinctiveCode: Joi.string().required(),
+    emailCode: Joi.number().required(),
+    newPassword: Joi.string().required()
 });

@@ -59,7 +59,8 @@ export default {
 
     //#region MFAs
     wrong_email_code: 'Email Code is wrong!',
-    expired_email_code: "Email Code has expired!"
+    expired_email_code: "Email Code has expired!",
+    expired_distinctive_code: "Distinctive Code has expired!",
     //#endregion
 }
 

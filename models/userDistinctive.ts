@@ -12,6 +12,10 @@ const userDistinctiveSchema = new Schema(
             type: String,
             required: true
         },
+        expireDate: {
+            type: Number,
+            default: 0
+        },
         status: {
             enum: BaseStatusEnum,
             type: Number,
