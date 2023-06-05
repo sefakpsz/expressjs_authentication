@@ -18,10 +18,11 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
         );
 
     const decoded = tokenHelper.verifyToken(token);
-    const decipherUserId = createDecipheriv(encryptionAlgorithm, payloadKey, payloadIv);
-    const decryptedUserId = decipherUserId.update(decoded as string, 'hex', 'utf-8')
 
-    req.user.userId = decryptedUserId
+    req.user = {
+        userId: decoded as string,
+        email: '', // Set the email value as needed
+    };
 
     return next();
 }

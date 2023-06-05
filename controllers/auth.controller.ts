@@ -257,6 +257,7 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     const { userId } = req.user
 
     const user = await userModel.findById(userId)
+    console.log(user);
 
     if (!user)
         return res.status(HttpStatusCode.BadRequest).json(
