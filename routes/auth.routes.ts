@@ -3,6 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import { login, logout, register, changePassword, forgotPassword, checkMfas, sendEmailPass } from '../controllers/auth.controller'
 
 import { validator, Register, Login, ChangePassword, ForgotPassword, CheckMfas, SendEmailPass } from '../validations/auth.validations';
+import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get('/login', validator.query(Login), use(login));
 
 router.post('/logout', use(logout));
 
-router.post('/passwordChange', validator.query(ChangePassword), use(changePassword));
+router.post('/passwordChange', verifyToken, validator.query(ChangePassword), use(changePassword));
 
 router.post('/passwordForgot', validator.query(ForgotPassword), use(forgotPassword));
 
