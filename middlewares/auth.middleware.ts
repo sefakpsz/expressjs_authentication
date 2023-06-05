@@ -9,7 +9,7 @@ const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex')
 const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex')
 const encryptionAlgorithm = process.env.encryptionAlgorithm as string
 
-export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers["authorization"]?.split(" ")[1] as string;
 
     if (!token)
@@ -25,3 +25,5 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
 
     return next();
 }
+
+export default authMiddleware

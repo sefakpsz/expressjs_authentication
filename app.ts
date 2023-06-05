@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { validationError, unknownError } from './middlewares/error.middleware';
-import { verifyToken } from './middlewares/auth.middleware';
+import authMiddleware from './middlewares/auth.middleware';
 
 import auth from './routes/auth.routes'
 import board from './routes/board.routes'
@@ -27,7 +27,7 @@ app.use('/group', group);
 
 app.use(validationError);
 app.use(unknownError);
-app.use(verifyToken);
+app.use(authMiddleware);
 
 app.listen(process.env.port, async () => {
     await connectToDb()
