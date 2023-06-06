@@ -39,9 +39,13 @@ export interface CheckMfasPass extends ValidatedRequestSchema {
     };
 }
 
-//ask it to osman
-// export interface RegisterType extends ValidatedRequestSchema {
-//     [ContainerTypes.Body]: {
-//         email: string;
-//     };
-// }
+export interface IUser {
+    _id: String,
+    passwordHash: String,
+    passwordSalt: String,
+    name: String,
+    surname: String,
+    email: String,
+    boards: [],
+    status: Number
+}

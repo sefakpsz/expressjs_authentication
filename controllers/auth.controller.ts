@@ -57,7 +57,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             )
         )
 
-    const passwordVerification = await verifyPasswordHash(password, user.passwordHash, user.passwordSalt)
+    const passwordVerification = await verifyPasswordHash(password, user.passwordHash as string, user.passwordSalt as string)
 
     if (!passwordVerification)
         return res.status(HttpStatusCode.BadRequest).json(
@@ -74,7 +74,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     }
 
     const userDistinctiveFromDb = await userDistinctiveModel.findOne({ user: user.id })
-    console.log(userDistinctiveFromDb)
+
     if (userDistinctiveFromDb)
         await userDistinctiveModel.updateOne({ _id: userDistinctiveFromDb.id }, { code: userDistinctiveData.code, expireDate: userDistinctiveData.expireDate })
     else
@@ -108,14 +108,14 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     )
 }
 
-const sendEmailFunc = async (userId: string, email: string, subject: string) => {
+const sendEmailFunc = async (userId: String, email: String, subject: String) => {
     let emailCode = randomInt(100000, 999999)
 
     const date = new Date()
-    await sendMail(email, subject, `Email Code: ${emailCode}`)
+    await sendMail(email as string, subject as string, `Email Code: ${emailCode}`)
     await userMfaModel.updateOne(
         {
-            user: new Types.ObjectId(userId),
+            user: new Types.ObjectId(userId as string),
             "mfaTypes.type": MfaEnum.Email,
         },
         {
@@ -249,38 +249,24 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
 }
 
 export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
-    // enter email code, token, old&new password then and change password
+    const { oldPassword, newPassword } = req.query
+    const user = req.user
 
-    // token has to be for this scenerio
 
-    const { oldPassword, newPassword } = req.body
-    const { userId } = req.user
-
-    const user = await userModel.findById(userId)
-    console.log(user);
-
-    if (!user)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(
-                null,
-                messages.user_couldnt_found
-            )
-        )
-
-    const verificationOfOldPassword = await verifyPasswordHash(oldPassword, user.passwordHash, user.passwordSalt);
+    const verificationOfOldPassword = await verifyPasswordHash(oldPassword as string, user.passwordHash as string, user.passwordSalt as string);
     if (!verificationOfOldPassword)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(null, messages.user_wrong_password)
         )
 
-    const { hash, salt } = await createPasswordHash(newPassword)
+    const { hash, salt } = await createPasswordHash(newPassword as string)
 
     if (hash === user.passwordHash)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(null, messages.user_same_password)
         )
 
-    await userModel.updateOne({ _id: user.id }, { passwordHash: hash, passwordSalt: salt })
+    await userModel.updateOne({ _id: user._id }, { passwordHash: hash, passwordSalt: salt })
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(null, messages.success)
@@ -290,7 +276,6 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
 export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
 
     const { distinctiveCode, emailCode, newPassword } = req.query
-    console.log(distinctiveCode);
 
     const userDistinctiveData = await userDistinctiveModel.findOne({ code: distinctiveCode })
     if (!userDistinctiveData)
@@ -351,7 +336,7 @@ export const sendEmailPass = async (req: ValidatedRequest<CheckMfasPass>, res: R
             errorResult(null, messages.user_couldnt_found)
         )
 
-    const emailData = await sendEmailFunc(user.id, email as string, "Forgetten Password")
+    await sendEmailFunc(user.id, email as string, "Forgetten Password")
 
     const distinctiveCode = await createDistinctiveCode()
 

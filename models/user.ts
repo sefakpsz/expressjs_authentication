@@ -1,7 +1,8 @@
 import { Schema, SchemaTypes, model } from 'mongoose'
 import { BaseStatusEnum } from '../utils/constants/enums';
+import { IUser } from '../types/auth.types';
 
-const userSchema = new Schema(
+const userSchema = new Schema<IUser>(
     {
         email: {
             type: String,
@@ -44,4 +45,4 @@ const userSchema = new Schema(
         timestamps: true
     });
 
-export default model('User', userSchema);
+export default model('User', userSchema)

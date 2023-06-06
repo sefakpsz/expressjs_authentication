@@ -1,16 +1,12 @@
+import { IUser } from "./auth.types"
+
 declare global {
     namespace Express {
         export interface Request {
-            user: {
-                userId: string | Number,
-                email: string
-            }
+            user: IUser
         }
         export interface Response {
-            user: {
-                userId: string | Number,
-                email: string
-            }
+            user: IUser
         }
     }
 }
