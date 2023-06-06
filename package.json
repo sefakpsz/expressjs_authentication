@@ -21,6 +21,7 @@
     "joi": "^17.9.1",
     "jsonwebtoken": "^9.0.0",
     "nodemailer": "^6.9.1",
+    "redis": "^4.6.7",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.4",
