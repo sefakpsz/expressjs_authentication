@@ -36,7 +36,13 @@
 //         })
 // })
 
-import { createClient } from 'redis';
+import { SchemaFieldTypes, createClient } from 'redis';
+import redis from 'ioredis'
+
+interface IResult {
+    token: string,
+    expireDate: string
+}
 
 const someFunct = async () => {
     const client = createClient();
@@ -52,25 +58,49 @@ const someFunct = async () => {
     console.log(sefa)
 
     const session = {
-        userId: "userId",
-        token: "token",
-        expireDate: "expireDate"
+        token: "TOKEN",
+        expireDate: "EXP_DATE"
     }
 
     await client.set('userSession:1224', JSON.stringify(session));
 
-    console.log(await client.get('userSession:1224'))
+    let result = await client.get('userSession:1224')
 
-    let TEST_KEY = "TEST_KEY"
+    console.log(JSON.parse(result || ""))
 
-    await client.json.set(TEST_KEY, '.', { node: 'blah blah black sheep' });
-    const value = await client.json.get(TEST_KEY, {
-        // JSON Path: .node = the element called 'node' at root level.
-        path: '.node'
-    });
+    client.setEx("key", 3600, JSON.stringify(session))
 
-    console.log(`value of node: ${value}`);
+    console.log(JSON.parse(await client.get("key") || ""))
+
+    const result2 = JSON.parse(await client.get("key") || "") as IResult
+
+    console.log(result2.expireDate)
+
+    await client.hSet("JWT Sessions", "userId_IPAddress", JSON.stringify(session))
+
+    const result3 = JSON.parse(await client.hGet("JWT Sessions", "userId_IPAddress") || "") as IResult
+
+    console.log(result3.token)
+
+    await client.lPush("myList", ["1", "2"])
+    await client.lInsert("myList", "AFTER", "AFTER", "1")
+}
+
+const someFunct2 = async () => {
+    const client = redis.createClient()
+    //await client.connect()
+
+    await client.hset('user-session:123', {
+        name: 'John',
+        surname: 'Smith',
+        company: 'Redis',
+        age: 29
+    })
+
+    let userSession = await client.hgetall('user-session:123');
+    console.log(JSON.stringify(userSession, null, 2));
 
 }
 
 someFunct()
+//someFunct2()
