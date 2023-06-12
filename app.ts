@@ -36,71 +36,49 @@
 //         })
 // })
 
-import { SchemaFieldTypes, createClient } from 'redis';
-import redis from 'ioredis'
+import redis from "ioredis";
+import { createClient } from "redis";
 
 interface IResult {
-    token: string,
-    expireDate: string
+  token: string;
+  expireDate: string;
 }
 
 const someFunct = async () => {
-    const client = createClient();
+  const client = createClient();
 
-    client.on('error', err => console.log('Redis Client Error', err));
+  client.on("error", (err) => console.log("Redis Client Error", err));
 
-    await client.connect();
+  await client.connect();
 
-    await client.set('sefa', 'ayşo');
+  const session = {
+    token: "TOKEN",
+    expireDate: "EXP_DATE",
+  };
 
-    const sefa = await client.get('sefa');
+  await client.hSet("JWT Sessions", "106_ev", JSON.stringify(session));
 
-    console.log(sefa)
+  const result3 = JSON.parse(
+    (await client.hGet("JWT Sessions", "userId_IPAddress")) || ""
+  ) as IResult;
 
-    const session = {
-        token: "TOKEN",
-        expireDate: "EXP_DATE"
-    }
-
-    await client.set('userSession:1224', JSON.stringify(session));
-
-    let result = await client.get('userSession:1224')
-
-    console.log(JSON.parse(result || ""))
-
-    client.setEx("key", 3600, JSON.stringify(session))
-
-    console.log(JSON.parse(await client.get("key") || ""))
-
-    const result2 = JSON.parse(await client.get("key") || "") as IResult
-
-    console.log(result2.expireDate)
-
-    await client.hSet("JWT Sessions", "userId_IPAddress", JSON.stringify(session))
-
-    const result3 = JSON.parse(await client.hGet("JWT Sessions", "userId_IPAddress") || "") as IResult
-
-    console.log(result3.token)
-
-    await client.lPush("myList", ["1", "2"])
-    await client.lInsert("myList", "AFTER", "AFTER", "1")
-}
+  console.log(result3.token);
+};
 
 const someFunct2 = async () => {
-    const client = redis.createClient()
-    //await client.connect()
+  const client = redis.createClient();
+  //await client.connect()
 
-    await client.hset('user-session:123', {
-        name: 'John',
-        surname: 'Smith',
-        company: 'Redis',
-        age: 29
-    })
+  await client.hset("user-session:123", {
+    name: "John",
+    surname: "Smith",
+    company: "Redis",
+    age: 29,
+  });
 
-    let userSession = await client.hgetall('user-session:123');
-    console.log(JSON.stringify(userSession, null, 2));
+  let userSession = await client.hgetall("user-session:123");
+  console.log(JSON.stringify(userSession, null, 2));
+};
 
-}
-
-someFunct()
+someFunct();
 //someFunct2()
