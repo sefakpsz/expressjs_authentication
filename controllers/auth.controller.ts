@@ -1,18 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-import { ValidatedRequest } from "express-joi-validation";
-import { HttpStatusCode } from "axios";
-import { sendMail } from '../utils/providers/mail/config';
+import { Request, Response, NextFunction } from 'express'
+import { ValidatedRequest } from "express-joi-validation"
+import { HttpStatusCode } from "axios"
+import { sendMail } from '../utils/providers/mail/config'
 import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
 import messages from '../utils/constants/messages'
 import userModel from '../models/user'
-import { CheckMfas, LoginType, RegisterType, ResetPassword, CheckMfasPass } from '../types/auth.types';
-import { randomBytes, randomInt } from 'crypto';
-import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums';
-import userDistinctiveModel from '../models/userDistinctive';
-import userMfaModel from '../models/userMfa';
-import { createToken, verifyToken } from '../utils/helpers/token.helper';
-import { Types } from 'mongoose';
+import { CheckMfas, LoginType, RegisterType, ResetPassword, CheckMfasPass } from '../types/auth.types'
+import { randomBytes, randomInt } from 'crypto'
+import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums'
+import userDistinctiveModel from '../models/userDistinctive'
+import userMfaModel from '../models/userMfa'
+import { createToken, verifyToken } from '../utils/helpers/token.helper'
+import { Types } from 'mongoose'
+import { setUserSession } from '../utils/helpers/session.helper'
 
 //#region Logic of Auth
 /* 
@@ -44,8 +45,7 @@ JWT
 
 export const login = async (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
 
-    const email = req.query.email
-    const password = req.query.password
+    const { email, password } = req.query
 
     const user = await userModel.findOne({ email, status: BaseStatusEnum.Active })
 
@@ -147,7 +147,7 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
             .status(HttpStatusCode.BadRequest)
             .json(errorResult(null, messages.user_already_exists))
 
-    const passwordHashAndSalt = await createPasswordHash(password);
+    const passwordHashAndSalt = await createPasswordHash(password)
 
     const user = {
         id: "",
@@ -160,7 +160,7 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
 
     await userModel.create(user)
         .then(data => {
-            user.id = data.id;
+            user.id = data.id
         })
 
 
@@ -177,7 +177,7 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
 }
 
 const createDistinctiveCode = async () => {
-    return randomBytes(5).toString('hex');
+    return randomBytes(5).toString('hex')
 }
 
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
@@ -239,9 +239,11 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         //     if(mfaData.code!==googleCode)
         // }
     }
-    await mfaDataOfUser.save();
+    await mfaDataOfUser.save()
 
     const token = createToken(user.id)
+
+    setUserSession(userDistinctive.user.toString(), req.socket.remoteAddress as string, token)
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)
@@ -253,7 +255,7 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     const user = req.user
 
 
-    const verificationOfOldPassword = await verifyPasswordHash(oldPassword as string, user.passwordHash as string, user.passwordSalt as string);
+    const verificationOfOldPassword = await verifyPasswordHash(oldPassword as string, user.passwordHash as string, user.passwordSalt as string)
     if (!verificationOfOldPassword)
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(null, messages.user_wrong_password)

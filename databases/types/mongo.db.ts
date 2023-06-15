@@ -8,6 +8,6 @@ export const connectToMongo = async () => {
         .catch((error) => {
             console.log(error.message)
             console.error(error)
-            process.exit();
+            process.exit()
         })
 }
