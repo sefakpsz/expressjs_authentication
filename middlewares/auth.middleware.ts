@@ -27,13 +27,7 @@ const authMiddleware = async (req: Request, res: Response, next: NextFunction) =
             errorResult(null, messages.user_couldnt_found)
         )
 
-    const ip = req.socket.remoteAddress ||
-        req.ip.split(':').slice(-1).toString()
-    // ||
-    // req.headers['x-forwarded-for'].tos ||
-    // req.header('x-forwarded-for')
-
-    const session = await getUserSession(decoded, ip)
+    const session = await getUserSession(req, decoded)
 
     if (!session)
         return res.status(HttpStatusCode.Unauthorized).json(

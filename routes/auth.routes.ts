@@ -17,7 +17,7 @@ router.get('/sendEmailPass', validator.query(SendEmailPass), catching(sendEmailP
 
 router.get('/login', validator.query(Login), catching(login))
 
-router.post('/logout', catching(logout))
+router.post('/logout',authMiddleware, catching(logout))
 
 router.post('/passwordChange', authMiddleware, validator.query(ChangePassword), catching(changePassword))
 

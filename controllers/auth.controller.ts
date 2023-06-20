@@ -13,7 +13,7 @@ import userDistinctiveModel from '../models/userDistinctive'
 import userMfaModel from '../models/userMfa'
 import { createToken, verifyToken } from '../utils/helpers/token.helper'
 import { Types } from 'mongoose'
-import { clearUserSession, setUserSession } from '../utils/helpers/session.helper'
+import { clearUserSession, clearUserSessions, setUserSession } from '../utils/helpers/session.helper'
 import { redisServer } from '../databases/types/redis'
 
 //#region Logic of Auth
@@ -131,12 +131,9 @@ const sendEmailFunc = async (userId: String, email: String, subject: String) => 
 }
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user._id
-    const ip = req.ip.split(':').slice(-1).toString()
+    const userId = req.user._id.toString()
 
-    await clearUserSession(userId as string, ip)
-
-    req.headers["authorization"] = ""
+    await clearUserSession(req, userId)
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(true, messages.success)
@@ -249,7 +246,7 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
 
     const token = createToken(user.id)
 
-    setUserSession(userDistinctive.user.toString(), req.socket.remoteAddress as string, token)
+    await setUserSession(req, userDistinctive.user.id.toString(), token)
 
     return res.status(HttpStatusCode.Ok).json(
         successResult(token, messages.success)
@@ -282,7 +279,6 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
 }
 
 export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
-
     const { distinctiveCode, emailCode, newPassword } = req.query
 
     const userDistinctiveData = await userDistinctiveModel.findOne({ code: distinctiveCode })
@@ -302,6 +298,7 @@ export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: 
         return res.status(HttpStatusCode.BadRequest).json(
             errorResult(null, messages.user_couldnt_found)
         )
+    await clearUserSessions(user.id.toString())
 
     const userMfaData = await userMfaModel.findOne({ user })
     if (!userMfaData)
@@ -328,13 +325,14 @@ export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: 
 
     await userModel.updateOne({ _id: user.id }, { passwordHash: hash, passwordSalt: salt })
 
+    await clearUserSessions(user.id.toString())
+
     return res.status(HttpStatusCode.Ok).json(
         successResult(true, messages.user_password_updated)
     )
 }
 
 export const sendEmailPass = async (req: ValidatedRequest<CheckMfasPass>, res: Response, next: NextFunction) => {
-
     const { email } = req.query
 
     const user = await userModel.findOne({ email })
@@ -348,9 +346,14 @@ export const sendEmailPass = async (req: ValidatedRequest<CheckMfasPass>, res: R
 
     const distinctiveCode = await createDistinctiveCode()
 
+    const date = new Date()
+
     await userDistinctiveModel.updateOne(
         { user },
-        { code: distinctiveCode }
+        {
+            code: distinctiveCode,
+            expireDate: date.setMinutes(date.getMinutes() + 3)
+        }
     )
 
     return res.status(HttpStatusCode.Ok).json(
