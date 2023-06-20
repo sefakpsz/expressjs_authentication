@@ -1,6 +1,6 @@
 # .env
 
-- **port = 1907 **
+- **port = 1907**
 
 - **mongoConnectionString = mongodb+srv://sefakpsz:Pkgbui39GWkZhwqU@aysoo.av3nka3.mongodb.net/msk**
 - **mongoConnectionStringDocker = mongodb://127.0.0.1:27017/msk**
