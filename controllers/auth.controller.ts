@@ -14,7 +14,7 @@ import userMfaModel from '../models/userMfa'
 import { createToken, verifyToken } from '../utils/helpers/token.helper'
 import { Types } from 'mongoose'
 import { clearUserSession, setUserSession } from '../utils/helpers/session.helper'
-import { redisServer } from '../databases/types/redis.db'
+import { redisServer } from '../databases/types/redis'
 
 //#region Logic of Auth
 /* 

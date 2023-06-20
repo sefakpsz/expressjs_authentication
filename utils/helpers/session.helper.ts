@@ -1,4 +1,4 @@
-import { redisServer } from "../../databases/types/redis.db"
+import { redisServer } from "../../databases/types/redis"
 import { IRedisResult } from "../../types/auth.types"
 
 export const setUserSession = async (userId: string, ip: string, token: string): Promise<Boolean> => {
