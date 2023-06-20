@@ -13,7 +13,8 @@ import userDistinctiveModel from '../models/userDistinctive'
 import userMfaModel from '../models/userMfa'
 import { createToken, verifyToken } from '../utils/helpers/token.helper'
 import { Types } from 'mongoose'
-import { setUserSession } from '../utils/helpers/session.helper'
+import { clearUserSession, setUserSession } from '../utils/helpers/session.helper'
+import { redisServer } from '../databases/types/redis.db'
 
 //#region Logic of Auth
 /* 
@@ -129,12 +130,17 @@ const sendEmailFunc = async (userId: String, email: String, subject: String) => 
     return { emailCode }
 }
 
-export const logout = (req: Request, res: Response, next: NextFunction) => {
-    // AFTER FINISHING REDIS TOKEN SIDE
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user._id
+    const ip = req.ip.split(':').slice(-1).toString()
 
-    /*
-    via token go to user's token info and make expire prop to true and write current datetime to updatedAt
-     */
+    await clearUserSession(userId as string, ip)
+
+    req.headers["authorization"] = ""
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult(true, messages.success)
+    )
 }
 
 export const register = async (req: ValidatedRequest<RegisterType>, res: Response, next: NextFunction) => {
