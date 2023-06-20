@@ -1,7 +1,7 @@
-import { createValidator } from 'express-joi-validation';
-import Joi from 'joi';
+import { createValidator } from 'express-joi-validation'
+import Joi from 'joi'
 
-export const validator = createValidator({ passError: true });
+export const validator = createValidator({ passError: true })
 
 const passwordRules = (value: string, helpers: any) => {
     // write your own password rules and add as below example
@@ -13,33 +13,35 @@ export const Register = Joi.object({
     password: Joi.string().required(),
     name: Joi.string().required(),
     surname: Joi.string().required()
-});
+})
 
 export const CheckMfas = Joi.object({
     distinctiveCode: Joi.string().required(),
-    emailCode: Joi.string().required()
-});
+    emailCode: Joi.number(),
+    googleCode: Joi.number()
+})
 
 export const SendEmailPass = Joi.object({
     email: Joi.string().email().required()
-});
+})
 
 export const SendMfaCode = Joi.object({
     code: Joi.string().required()
-});
+})
 
 export const Login = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
-});
+})
 
 export const ChangePassword = Joi.object({
     oldPassword: Joi.string().required(),
     newPassword: Joi.string().required(),
-});
+})
 
 export const ForgotPassword = Joi.object({
     distinctiveCode: Joi.string().required(),
-    emailCode: Joi.number().required(),
+    emailCode: Joi.number(),
+    googleCode: Joi.number(),
     newPassword: Joi.string().required()
-});
+})

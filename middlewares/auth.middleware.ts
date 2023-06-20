@@ -6,12 +6,9 @@ import tokenHelper from '../utils/helpers/token.helper'
 import userModel from '../models/user'
 import { getUserSession } from '../utils/helpers/session.helper'
 
-// const payloadKey = Buffer.from(process.env.payloadKey as string, 'hex')
-// const payloadIv = Buffer.from(process.env.payloadIv as string, 'hex')
-// const encryptionAlgorithm = process.env.encryptionAlgorithm as string
-
 const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers["authorization"]?.split(" ")[1] as string
+    // token need to be taken from session not from header
 
     if (!token)
         return res.status(HttpStatusCode.Unauthorized).json(

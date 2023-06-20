@@ -19,7 +19,8 @@ export interface RegisterType extends ValidatedRequestSchema {
 export interface CheckMfas extends ValidatedRequestSchema {
     [ContainerTypes.Query]: {
         distinctiveCode: string,
-        emailCode: Number
+        emailCode: Number,
+        googleCode: Number
     }
 }
 
@@ -27,6 +28,7 @@ export interface ResetPassword extends ValidatedRequestSchema {
     [ContainerTypes.Body]: {
         distinctiveCode: string,
         emailCode: Number,
+        googleCode: Number,
         newPassword: string
     }
 }

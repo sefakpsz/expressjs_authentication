@@ -31,13 +31,15 @@ export const getUserSession = async (req: Request, userId: string) => {
             return false
         })
 
-    if (!redisResponse) {
+    if (!redisResponse)
         return false
-    }
 
     const userSession = JSON.parse(
         redisResponse as string
     ) as IRedisResult
+
+    if (!userSession.token)
+        return false
 
     return userSession
 }

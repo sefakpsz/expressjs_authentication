@@ -91,7 +91,6 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             )
         )
 
-    //It is not dynamic approach !!!
     userMfas?.mfaTypes.forEach(async mfa => {
         if (mfa.type === MfaEnum.Email) {
             await sendEmailFunc(user.id, user.email, "Login")
@@ -103,7 +102,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 
     return res.status(HttpStatusCode.BadRequest).json(
         successResult(
-            { DistinctiveCode: userDistinctiveData.code },
+            { distinctiveCode: userDistinctiveData.code },
             messages.success
         )
     )
@@ -184,7 +183,7 @@ const createDistinctiveCode = async () => {
 }
 
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
-    const { distinctiveCode, emailCode } = req.query
+    const { distinctiveCode, emailCode, googleCode } = req.query
 
     const userDistinctive = await userDistinctiveModel.findOne({ code: distinctiveCode, status: BaseStatusEnum.Active }).populate("user")
 
@@ -223,25 +222,37 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
             errorResult(null, messages.userMfa_couldnt_found)
         )
 
-    for (let mfaData of mfaDataOfUser?.mfaTypes) {
-        if (mfaData.type === MfaEnum.Email) {
-            if (mfaData.code.toString() !== emailCode.toString()) {
-                return res.status(HttpStatusCode.BadRequest).json(
-                    errorResult(null, messages.wrong_email_code)
-                )
-            } else if (mfaData.expireDate <= Date.now()) {
-                return res.status(HttpStatusCode.BadRequest).json(
-                    errorResult(null, messages.expired_email_code)
-                )
-            }
-            mfaData.code = 0
-            mfaData.expireDate = 0
+    mfaDataOfUser.mfaTypes.forEach(mfa => {
+        switch (mfa.type) {
+            case MfaEnum.Email:
+                {
+                    if (mfa.code !== emailCode)
+                        return res.status(HttpStatusCode.BadRequest).json(
+                            errorResult(null, messages.wrong_email_code)
+                        )
+                }
+                break
+            case MfaEnum.GoogleAuth:
+                {
+                    if (mfa.code !== googleCode)
+                        return res.status(HttpStatusCode.BadRequest).json(
+                            errorResult(null, messages.wrong_google_code)
+                        )
+                }
+                break
+
+            default:
+                break
         }
-        // if google auth will be implemented
-        // if(mfaData.type === MfaEnum.GoogleAuth){
-        //     if(mfaData.code!==googleCode)
-        // }
-    }
+
+        if (mfa.expireDate < Date.now())
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(null, messages.expired_code)
+            )
+
+        mfa.code = 0, mfa.expireDate = 0
+    })
+
     await mfaDataOfUser.save()
 
     const token = createToken(user.id)
@@ -249,7 +260,7 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
     await setUserSession(req, userDistinctive.user.id.toString(), token)
 
     return res.status(HttpStatusCode.Ok).json(
-        successResult(token, messages.success)
+        successResult({ token }, messages.success)
     )
 }
 
@@ -279,7 +290,7 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
 }
 
 export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
-    const { distinctiveCode, emailCode, newPassword } = req.query
+    const { distinctiveCode, emailCode, googleCode, newPassword } = req.query
 
     const userDistinctiveData = await userDistinctiveModel.findOne({ code: distinctiveCode })
     if (!userDistinctiveData)
@@ -306,15 +317,38 @@ export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: 
             errorResult(null, messages.userMfa_couldnt_found)
         )
 
-    // with a loop make here dynamic, and don't forget to user prop of status
-    if (userMfaData.mfaTypes[0].expireDate < Date.now())
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.expired_email_code)
-        )
-    else if (userMfaData.mfaTypes[0].code !== emailCode)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.wrong_email_code)
-        )
+    userMfaData.mfaTypes.forEach(mfa => {
+        switch (mfa.type) {
+            case MfaEnum.Email:
+                {
+                    if (mfa.code !== emailCode)
+                        return res.status(HttpStatusCode.BadRequest).json(
+                            errorResult(null, messages.wrong_email_code)
+                        )
+                }
+                break
+            case MfaEnum.GoogleAuth:
+                {
+                    if (mfa.code !== googleCode)
+                        return res.status(HttpStatusCode.BadRequest).json(
+                            errorResult(null, messages.wrong_google_code)
+                        )
+                }
+                break
+
+            default:
+                break
+        }
+
+        if (mfa.expireDate < Date.now())
+            return res.status(HttpStatusCode.BadRequest).json(
+                errorResult(null, messages.expired_code)
+            )
+
+        mfa.code = 0, mfa.expireDate = 0
+    })
+
+    await userMfaData.save()
 
     const { hash, salt } = await createPasswordHash(newPassword)
 
@@ -357,6 +391,6 @@ export const sendEmailPass = async (req: ValidatedRequest<CheckMfasPass>, res: R
     )
 
     return res.status(HttpStatusCode.Ok).json(
-        successResult(distinctiveCode, messages.success)
+        successResult({ distinctiveCode }, messages.success)
     )
 }
