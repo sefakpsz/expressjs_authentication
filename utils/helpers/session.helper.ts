@@ -9,18 +9,32 @@ export const setUserSession = async (userId: string, ip: string, token: string):
     }
 
     await redisServer.hSet("Sessions", `${userId}_${ip}`, JSON.stringify(session))
+        .catch(err => {
+            console.error(err)
+            return false
+        })
 
     return true
 }
 
-export const getUserSession = async (userId: string, ip: string): Promise<IRedisResult> => {
+export const getUserSession = async (userId: string, ip: string) => {
+    const redisResponse = await redisServer.hGet("Sessions", `${userId}_${ip}`)
+        .catch(err => {
+            console.error(err)
+            return false
+        })
+
+    if (!redisResponse) {
+        return false
+    }
+
     const userSession = JSON.parse(
-        (await redisServer.hGet("Sessions", `${userId}_${ip}`)) || ""
+        redisResponse as string
     ) as IRedisResult
 
     return userSession
 }
 
-export const getSession = async () => {
-
+export const clearUserSessions = async (userId: string) => {
+    redisServer.hgetall
 }
