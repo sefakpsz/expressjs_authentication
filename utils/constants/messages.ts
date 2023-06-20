@@ -5,6 +5,8 @@ export default {
     //#region Authentication
     token_missing: 'Token is missing!',
     token_invalid: 'Invalid Token!',
+    session_not_found: 'Session not found!',
+    session_expired: "Session has exipred!",
     //#endregion
 
     //#region User Distinctive
