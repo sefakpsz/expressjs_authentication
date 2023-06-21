@@ -34,8 +34,6 @@ app.listen(process.env.port, async () => {
     })
 })
 
-
-
 // Asymmetric Algorithm
 // const { publicKey, privateKey, } = generateKeyPairSync("rsa", {
 //   modulusLength: 2048,
