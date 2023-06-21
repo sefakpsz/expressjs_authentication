@@ -1,7 +1,7 @@
-import { HttpStatusCode } from 'axios';
+import { HttpStatusCode } from 'axios'
 import express from 'express'
 
-const res = express.response;
+const res = express.response
 
 export const successResult = (data: object | string | number | Boolean | null, message: string) => {
     return {

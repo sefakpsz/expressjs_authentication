@@ -185,29 +185,48 @@ const createDistinctiveCode = async () => {
 export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
     const { distinctiveCode, emailCode, googleCode } = req.query
 
+    const mfaResult = await checkMfaCodes(distinctiveCode, emailCode, googleCode)
+
+    if (!mfaResult?.success)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, mfaResult?.message as string)
+        )
+    console.log(mfaResult.data)
+    const userDistinctive = mfaResult.data as {
+        user: string,
+        code: String,
+        expireDate: Number,
+        status: Number
+    }
+
+    const token = createToken(userDistinctive.user)
+
+    await setUserSession(req, userDistinctive.user, token)
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult({ token }, messages.success)
+    )
+}
+
+const checkMfaCodes = async (distinctiveCode: string, emailCode: Number, googleCode: Number) => {
     const userDistinctive = await userDistinctiveModel.findOne({ code: distinctiveCode, status: BaseStatusEnum.Active }).populate("user")
 
     if (!userDistinctive)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(
-                null,
-                messages.userDistinctive_couldnt_find
-            )
+        return errorResult(
+            null,
+            messages.userDistinctive_couldnt_find
         )
 
     if (userDistinctive.expireDate < Date.now())
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.expired_distinctive_code)
-        )
+        return errorResult(null, messages.expired_distinctive_code)
+
 
     const user = await userModel.findOne(userDistinctive.user)
 
     if (!user)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(
-                null,
-                messages.user_couldnt_found
-            )
+        return errorResult(
+            null,
+            messages.user_couldnt_found
         )
 
     const mfaDataOfUser = await userMfaModel.findOne(
@@ -218,26 +237,21 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
     )
 
     if (!mfaDataOfUser)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.userMfa_couldnt_found)
-        )
+        return
+    errorResult(null, messages.userMfa_couldnt_found)
 
     mfaDataOfUser.mfaTypes.forEach(mfa => {
         switch (mfa.type) {
             case MfaEnum.Email:
                 {
                     if (mfa.code !== emailCode)
-                        return res.status(HttpStatusCode.BadRequest).json(
-                            errorResult(null, messages.wrong_email_code)
-                        )
+                        return errorResult(null, messages.wrong_email_code)
                 }
                 break
             case MfaEnum.GoogleAuth:
                 {
                     if (mfa.code !== googleCode)
-                        return res.status(HttpStatusCode.BadRequest).json(
-                            errorResult(null, messages.wrong_google_code)
-                        )
+                        return errorResult(null, messages.wrong_google_code)
                 }
                 break
 
@@ -246,22 +260,16 @@ export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response,
         }
 
         if (mfa.expireDate < Date.now())
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(null, messages.expired_code)
-            )
+            return
+        errorResult(null, messages.expired_code)
 
         mfa.code = 0, mfa.expireDate = 0
+
     })
 
     await mfaDataOfUser.save()
 
-    const token = createToken(user.id)
-
-    await setUserSession(req, userDistinctive.user.id.toString(), token)
-
-    return res.status(HttpStatusCode.Ok).json(
-        successResult({ token }, messages.success)
-    )
+    return successResult(userDistinctive, messages.success)
 }
 
 export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
