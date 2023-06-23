@@ -1,14 +1,14 @@
 import { ValidatedRequestSchema, ContainerTypes } from 'express-joi-validation'
 
 export interface LoginType extends ValidatedRequestSchema {
-    [ContainerTypes.Query]: {
+    [ContainerTypes.Body]: {
         email: string
         password: string
     }
 }
 
 export interface RegisterType extends ValidatedRequestSchema {
-    [ContainerTypes.Query]: {
+    [ContainerTypes.Body]: {
         email: string
         password: string
         name: string
@@ -24,20 +24,28 @@ export interface CheckMfas extends ValidatedRequestSchema {
     }
 }
 
+export interface ChangePassword extends ValidatedRequestSchema {
+    [ContainerTypes.Query]: {
+        emailCode: string,
+        googleCode: Number,
+        oldPassword: string,
+        newPassword: string
+    }
+}
+
 export interface ResetPassword extends ValidatedRequestSchema {
     [ContainerTypes.Body]: {
-        distinctiveCode: string,
+        email: string,
         emailCode: Number,
         googleCode: Number,
         newPassword: string
     }
 }
 
-export interface CheckMfasPass extends ValidatedRequestSchema {
-    [ContainerTypes.Query]: {
-        distinctiveCode: string,
-        emailCode: string,
-        newPassword: string
+export interface SendEmail extends ValidatedRequestSchema {
+    [ContainerTypes.Body]: {
+        email: string,
+        operation: number
     }
 }
 

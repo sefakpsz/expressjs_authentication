@@ -2,13 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
+            "type": "pwa-node",
             "request": "launch",
-            "name": "Launch Program",
-            "program": "/app.ts",
-            "preLaunchTask": "tsc: build - tsconfig.json",
+            "name": "Debug Typescript",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\app.ts",
+            "runtimeArgs": [
+                "-r",
+                "ts-node/register",
+                "-r",
+                "tsconfig-paths/register"
+            ],
+            "console": "integratedTerminal",
             "outFiles": [
-                "/out/**/*.js"
+                "${workspaceFolder}/**/*.js"
             ]
         }
     ]

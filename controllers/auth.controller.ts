@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from 'express'
 import { ValidatedRequest } from "express-joi-validation"
 import { HttpStatusCode } from "axios"
 import { sendMail } from '../utils/providers/mail/config'
@@ -6,15 +6,14 @@ import { successResult, errorResult } from '../utils/constants/results'
 import { createPasswordHash, verifyPasswordHash } from '../utils/helpers/password.helper'
 import messages from '../utils/constants/messages'
 import userModel from '../models/user'
-import { CheckMfas, LoginType, RegisterType, ResetPassword, CheckMfasPass } from '../types/auth.types'
+import { ChangePassword, CheckMfas, LoginType, RegisterType, ResetPassword, SendEmail } from '../types/auth.types'
 import { randomBytes, randomInt } from 'crypto'
-import { BaseStatusEnum, MfaEnum, MfaStatusEnum } from '../utils/constants/enums'
+import { BaseStatusEnum, MailOperations, MfaEnum } from '../utils/constants/enums'
 import userDistinctiveModel from '../models/userDistinctive'
 import userMfaModel from '../models/userMfa'
-import { createToken, verifyToken } from '../utils/helpers/token.helper'
+import { createToken } from '../utils/helpers/token.helper'
 import { Types } from 'mongoose'
 import { clearUserSession, clearUserSessions, setUserSession } from '../utils/helpers/session.helper'
-import { redisServer } from '../databases/types/redis'
 
 //#region Logic of Auth
 /* 
@@ -44,9 +43,9 @@ JWT
 */
 //#endregion
 
-export const login = async (req: ValidatedRequest<LoginType>, res: Response, next: NextFunction) => {
+export const login = async (req: ValidatedRequest<LoginType>, res: Response) => {
 
-    const { email, password } = req.query
+    const { email, password } = req.body
 
     const user = await userModel.findOne({ email, status: BaseStatusEnum.Active })
 
@@ -70,7 +69,7 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
 
     const userDistinctiveData = {
         user,
-        code: randomBytes(4).toString("hex"),
+        code: await createDistinctiveCode(),
         expireDate: new Date().setMinutes(new Date().getMinutes() + 5)
     }
 
@@ -91,15 +90,6 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
             )
         )
 
-    userMfas?.mfaTypes.forEach(async mfa => {
-        if (mfa.type === MfaEnum.Email) {
-            await sendEmailFunc(user.id, user.email, "Login")
-        }
-        else if (mfa.type === MfaEnum.GoogleAuth) {
-            // google auth implementation
-        }
-    })
-
     return res.status(HttpStatusCode.BadRequest).json(
         successResult(
             { distinctiveCode: userDistinctiveData.code },
@@ -108,40 +98,19 @@ export const login = async (req: ValidatedRequest<LoginType>, res: Response, nex
     )
 }
 
-const sendEmailFunc = async (userId: String, email: String, subject: String) => {
-    let emailCode = randomInt(100000, 999999)
-
-    const date = new Date()
-    await sendMail(email as string, subject as string, `Email Code: ${emailCode}`)
-    await userMfaModel.updateOne(
-        {
-            user: new Types.ObjectId(userId as string),
-            "mfaTypes.type": MfaEnum.Email,
-        },
-        {
-            $set: {
-                "mfaTypes.$.code": emailCode,
-                "mfaTypes.$.expireDate": date.setMinutes(date.getMinutes() + 5)
-            },
-        },
-    )
-
-    return { emailCode }
-}
-
-export const logout = async (req: Request, res: Response, next: NextFunction) => {
+export const logout = async (req: Request, res: Response) => {
     const userId = req.user._id.toString()
 
     await clearUserSession(req, userId)
 
     return res.status(HttpStatusCode.Ok).json(
-        successResult(true, messages.success)
+        successResult(null, messages.success)
     )
 }
 
-export const register = async (req: ValidatedRequest<RegisterType>, res: Response, next: NextFunction) => {
+export const register = async (req: ValidatedRequest<RegisterType>, res: Response) => {
 
-    const { email, password, name, surname } = req.query
+    const { email, password, name, surname } = req.body
 
     const isEmailExists = await userModel.findOne({ email, status: true })
     if (isEmailExists)
@@ -174,43 +143,14 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
     return res
         .status(HttpStatusCode.Ok)
         .json(
-            successResult(true, messages.success)
+            successResult(null, messages.success)
         )
 }
 
-const createDistinctiveCode = async () => {
-    return randomBytes(5).toString('hex')
-}
+export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response) => {
+    const { distinctiveCode, emailCode, googleCode } = req.body
 
-export const checkMfas = async (req: ValidatedRequest<CheckMfas>, res: Response, next: NextFunction) => {
-    const { distinctiveCode, emailCode, googleCode } = req.query
-
-    const mfaResult = await checkMfaCodes(distinctiveCode, emailCode, googleCode)
-
-    if (!mfaResult?.success)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, mfaResult?.message as string)
-        )
-    console.log(mfaResult.data)
-    const userDistinctive = mfaResult.data as {
-        user: string,
-        code: String,
-        expireDate: Number,
-        status: Number
-    }
-
-    const token = createToken(userDistinctive.user)
-
-    await setUserSession(req, userDistinctive.user, token)
-
-    return res.status(HttpStatusCode.Ok).json(
-        successResult({ token }, messages.success)
-    )
-}
-
-const checkMfaCodes = async (distinctiveCode: string, emailCode: Number, googleCode: Number) => {
     const userDistinctive = await userDistinctiveModel.findOne({ code: distinctiveCode, status: BaseStatusEnum.Active }).populate("user")
-
     if (!userDistinctive)
         return errorResult(
             null,
@@ -221,61 +161,32 @@ const checkMfaCodes = async (distinctiveCode: string, emailCode: Number, googleC
         return errorResult(null, messages.expired_distinctive_code)
 
 
-    const user = await userModel.findOne(userDistinctive.user)
-
+    const user = await userModel.findById(userDistinctive.user)
     if (!user)
         return errorResult(
             null,
             messages.user_couldnt_found
         )
 
-    const mfaDataOfUser = await userMfaModel.findOne(
-        {
-            user: user._id,
-            "mfaTypes.status": BaseStatusEnum.Active
-        }
+    const mfaResult = await checkMfaCodes(emailCode, googleCode, user.id)
+
+    if (!mfaResult?.success)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, mfaResult?.message as string)
+        )
+
+    const token = createToken(user.id)
+
+    await setUserSession(req, user.id, token)
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult({ token }, messages.success)
     )
-
-    if (!mfaDataOfUser)
-        return
-    errorResult(null, messages.userMfa_couldnt_found)
-
-    mfaDataOfUser.mfaTypes.forEach(mfa => {
-        switch (mfa.type) {
-            case MfaEnum.Email:
-                {
-                    if (mfa.code !== emailCode)
-                        return errorResult(null, messages.wrong_email_code)
-                }
-                break
-            case MfaEnum.GoogleAuth:
-                {
-                    if (mfa.code !== googleCode)
-                        return errorResult(null, messages.wrong_google_code)
-                }
-                break
-
-            default:
-                break
-        }
-
-        if (mfa.expireDate < Date.now())
-            return
-        errorResult(null, messages.expired_code)
-
-        mfa.code = 0, mfa.expireDate = 0
-
-    })
-
-    await mfaDataOfUser.save()
-
-    return successResult(userDistinctive, messages.success)
 }
 
-export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
-    const { oldPassword, newPassword } = req.query
+export const changePassword = async (req: ValidatedRequest<ChangePassword>, res: Response) => {
+    const { oldPassword, newPassword } = req.body
     const user = req.user
-
 
     const verificationOfOldPassword = await verifyPasswordHash(oldPassword as string, user.passwordHash as string, user.passwordSalt as string)
     if (!verificationOfOldPassword)
@@ -297,66 +208,24 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     )
 }
 
-export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: Response, next: NextFunction) => {
-    const { distinctiveCode, emailCode, googleCode, newPassword } = req.query
+export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: Response) => {
+    const { email, emailCode, googleCode, newPassword } = req.body
 
-    const userDistinctiveData = await userDistinctiveModel.findOne({ code: distinctiveCode })
-    if (!userDistinctiveData)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.userDistinctive_couldnt_find)
-        )
-
-    if (userDistinctiveData.expireDate < Date.now())
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.expired_distinctive_code)
-        )
-
-    const user = await userModel.findById(userDistinctiveData.user)
-
+    const user = await userModel.findOne({ email })
     if (!user)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.user_couldnt_found)
-        )
-    await clearUserSessions(user.id.toString())
-
-    const userMfaData = await userMfaModel.findOne({ user })
-    if (!userMfaData)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.userMfa_couldnt_found)
+        return errorResult(
+            null,
+            messages.user_couldnt_found
         )
 
-    userMfaData.mfaTypes.forEach(mfa => {
-        switch (mfa.type) {
-            case MfaEnum.Email:
-                {
-                    if (mfa.code !== emailCode)
-                        return res.status(HttpStatusCode.BadRequest).json(
-                            errorResult(null, messages.wrong_email_code)
-                        )
-                }
-                break
-            case MfaEnum.GoogleAuth:
-                {
-                    if (mfa.code !== googleCode)
-                        return res.status(HttpStatusCode.BadRequest).json(
-                            errorResult(null, messages.wrong_google_code)
-                        )
-                }
-                break
+    const mfaResult = await checkMfaCodes(emailCode, googleCode, user.id)
 
-            default:
-                break
-        }
+    if (!mfaResult?.success)
+        return res.status(HttpStatusCode.BadRequest).json(
+            errorResult(null, mfaResult?.message as string)
+        )
 
-        if (mfa.expireDate < Date.now())
-            return res.status(HttpStatusCode.BadRequest).json(
-                errorResult(null, messages.expired_code)
-            )
-
-        mfa.code = 0, mfa.expireDate = 0
-    })
-
-    await userMfaData.save()
+    await clearUserSessions(user.id)
 
     const { hash, salt } = await createPasswordHash(newPassword)
 
@@ -367,38 +236,104 @@ export const forgotPassword = async (req: ValidatedRequest<ResetPassword>, res: 
 
     await userModel.updateOne({ _id: user.id }, { passwordHash: hash, passwordSalt: salt })
 
-    await clearUserSessions(user.id.toString())
+    await clearUserSessions(user.id)
 
     return res.status(HttpStatusCode.Ok).json(
-        successResult(true, messages.user_password_updated)
+        successResult(null, messages.user_password_updated)
     )
 }
 
-export const sendEmailPass = async (req: ValidatedRequest<CheckMfasPass>, res: Response, next: NextFunction) => {
-    const { email } = req.query
+export const sendEmail = async (req: ValidatedRequest<SendEmail>, res: Response) => {
+    const { email, operation } = req.body
 
     const user = await userModel.findOne({ email })
-
     if (!user)
-        return res.status(HttpStatusCode.BadRequest).json(
-            errorResult(null, messages.user_couldnt_found)
+        return errorResult(
+            null,
+            messages.user_couldnt_found
         )
 
-    await sendEmailFunc(user.id, email as string, "Forgetten Password")
+    if (!user)
+        return errorResult(null, messages.user_couldnt_found)
 
-    const distinctiveCode = await createDistinctiveCode()
+    switch (operation) {
+        case MailOperations.Login:
+            await sendEmailFunc(user?.id, user?.email as string, "Login")
+            break
+
+        case MailOperations.ForgotPassword:
+            await sendEmailFunc(user?.id, user?.email as string, "Forgotten Password")
+            break
+
+        default:
+            break
+    }
+
+    return res.status(HttpStatusCode.Ok).json(
+        successResult(null, messages.success)
+    )
+}
+
+
+const createDistinctiveCode = async () => {
+    return randomBytes(5).toString('hex')
+}
+
+const sendEmailFunc = async (userId: String, email: String, subject: String) => {
+    let emailCode = randomInt(100000, 999999)
 
     const date = new Date()
-
-    await userDistinctiveModel.updateOne(
-        { user },
+    await sendMail(email as string, subject as string, `Email Code: ${emailCode}`)
+    await userMfaModel.updateOne(
         {
-            code: distinctiveCode,
-            expireDate: date.setMinutes(date.getMinutes() + 3)
+            user: new Types.ObjectId(userId as string),
+            "mfaTypes.type": MfaEnum.Email,
+        },
+        {
+            $set: {
+                "mfaTypes.$.code": emailCode,
+                "mfaTypes.$.expireDate": date.setMinutes(date.getMinutes() + 5)
+            },
+        },
+    )
+
+    return { emailCode }
+}
+
+const checkMfaCodes = async (emailCode: Number, googleCode: Number, userId: string) => {
+
+    const mfaDataOfUser = await userMfaModel.findOne(
+        {
+            user: userId,
+            "mfaTypes.status": BaseStatusEnum.Active
         }
     )
 
-    return res.status(HttpStatusCode.Ok).json(
-        successResult({ distinctiveCode }, messages.success)
-    )
+    if (!mfaDataOfUser)
+        return errorResult(null, messages.userMfa_couldnt_found)
+
+    for (let mfa of mfaDataOfUser.mfaTypes) {
+        switch (mfa.type) {
+            case MfaEnum.Email:
+                {
+                    if (mfa.code !== emailCode)
+                        return errorResult(null, messages.wrong_email_code)
+                }
+                break
+            case MfaEnum.GoogleAuth:
+                {
+                    if (mfa.code !== googleCode)
+                        return errorResult(null, messages.wrong_google_code)
+                }
+                break
+
+            default:
+                break
+        }
+
+        if (mfa.expireDate < Date.now())
+            return errorResult(null, messages.expired_code)
+    }
+
+    return successResult(null, messages.success)
 }
