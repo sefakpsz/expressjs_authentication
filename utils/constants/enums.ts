@@ -1,3 +1,8 @@
+export enum MailOperations {
+    Login,
+    ForgotPassword
+}
+
 export enum BaseStatusEnum {
     Passive,
     Active

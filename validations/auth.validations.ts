@@ -21,8 +21,9 @@ export const CheckMfas = Joi.object({
     googleCode: Joi.number()
 })
 
-export const SendEmailPass = Joi.object({
-    email: Joi.string().email().required()
+export const SendEmail = Joi.object({
+    email: Joi.string().email().required(),
+    operation: Joi.number().required()
 })
 
 export const SendMfaCode = Joi.object({
@@ -35,12 +36,14 @@ export const Login = Joi.object({
 })
 
 export const ChangePassword = Joi.object({
+    emailCode: Joi.number(),
+    googleCode: Joi.number(),
     oldPassword: Joi.string().required(),
     newPassword: Joi.string().required(),
 })
 
 export const ForgotPassword = Joi.object({
-    distinctiveCode: Joi.string().required(),
+    email: Joi.string().email().required(),
     emailCode: Joi.number(),
     googleCode: Joi.number(),
     newPassword: Joi.string().required()
