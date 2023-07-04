@@ -6,6 +6,7 @@ services:
       - "1907:1907"
     depends_on:
       - mongo
+      - redis
   mongo:
     image: mongo
     ports:

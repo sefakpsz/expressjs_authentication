@@ -2,7 +2,9 @@ import { RedisClientType, createClient } from "redis"
 
 export let redisServer: RedisClientType
 export const connectToRedis = async () => {
-    redisServer = createClient()
+    redisServer = createClient({
+        url: 'redis://redis:6379'
+    })
 
     redisServer.on("error", (err) => console.log("Redis Client Error", err))
 
