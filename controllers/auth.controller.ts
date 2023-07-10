@@ -17,31 +17,11 @@ import { clearUserSession, clearUserSessions, setUserSession } from '../utils/he
 
 //#region Logic of Auth
 /* 
-
-User'll enter mail and password --> it returns a distinctiveCode randomBytes(4).toString("hex")
-
-With help of distinctiveCode, user get mfa/mfas (which options are selected from user)
-
-User go to the getToken() type distinctiveCode-MFA code/codes
-
-if all of them true, user get his/her token
-and 
-(use hooks for that reason https://mongoosejs.com/docs/middleware.html#post-async)
-WRITE TRIGGER in the mongodb when expireDate is came status of distinctiveCode will be false!
-
-JWT
-
-- Keep a global list of JWTs that have been revoked before they expired (and remove the tokens after expiry). 
-    Instead of letting webservers hit a server to get this list, push the list to each server using a pub/sub mechanism.
-- Revoking tokens is important for security, but rare. Realistically this list is small and easily fits into memory. 
-    This largely solves the logout issue.
-
- payload{
-    email: sefakapisiz@gmail.com,
-    userId: encryptedPayload
- }
+    remove userDistinctive model and combine it with userMfas model
+    limit the sending email in determined minutes
+    move all implementations into the services/authentication.service.ts file
 */
-//#endregion
+
 
 export const login = async (req: ValidatedRequest<LoginType>, res: Response) => {
 
