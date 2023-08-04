@@ -1,20 +1,21 @@
-import { RedisClientType, createClient } from "redis"
+import { RedisClientType, createClient } from 'redis'
 
 export let redisServer: RedisClientType
 export const connectToRedis = async () => {
-    redisServer = createClient({
-        url: 'redis://redis:6379'
+  redisServer = createClient({
+    url: process.env.redisUrlAWS,
+  })
+
+  redisServer.on('error', (err) => console.log('Redis Client Error', err))
+
+  await redisServer
+    .connect()
+    .then(() => {
+      console.log('Connected To Redis!')
     })
-
-    redisServer.on("error", (err) => console.log("Redis Client Error", err))
-
-    await redisServer.connect()
-        .then(() => {
-            console.log('Connected To Redis!')
-        })
-        .catch((error) => {
-            console.log(error.message)
-            console.error(error)
-            process.exit()
-        })
+    .catch((error) => {
+      console.log(error.message)
+      console.error(error)
+      process.exit()
+    })
 }
