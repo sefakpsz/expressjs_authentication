@@ -28,10 +28,9 @@ app.use(unknownError)
 app.use(authMiddleware)
 
 app.listen(process.env.port, async () => {
-  await connectToDb()
-    .then(async () => {
-      console.log(`http://127.0.0.1:${process.env.port || 1708} is listening...`)
-    })
+  await connectToDb().then(async () => {
+    console.log(`http://127.0.0.1:${process.env.port || 1708} is listening...`)
+  })
 })
 
 // Asymmetric Algorithm

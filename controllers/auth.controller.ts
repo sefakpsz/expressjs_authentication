@@ -75,17 +75,12 @@ export const register = async (req: ValidatedRequest<RegisterType>, res: Respons
 
   const passwordHashAndSalt = await createPasswordHash(password)
 
-  const user = {
-    id: '',
+  const user = await userModel.create({
     email,
     passwordHash: passwordHashAndSalt.hash,
     passwordSalt: passwordHashAndSalt.salt,
     name,
     surname,
-  }
-
-  await userModel.create(user).then((data) => {
-    user.id = data.id
   })
 
   await userMfaModel.create({
