@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
 
-import { login, logout, register, changePassword, forgotPassword, checkMfas, sendEmail } from '../controllers/auth.controller'
+import { login, logout, register, changePassword, forgotPassword, checkMfas, sendEmail } from '../controllers/auth'
 
 import { validator, Register, Login, ChangePassword, ForgotPassword, CheckMfas, SendEmail } from '../validations/auth.validations'
 import authMiddleware from '../middlewares/auth.middleware'

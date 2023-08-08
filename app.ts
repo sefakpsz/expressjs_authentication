@@ -6,10 +6,10 @@ dotenv.config()
 import { validationError, unknownError } from './middlewares/error.middleware'
 import authMiddleware from './middlewares/auth.middleware'
 
-import auth from './routes/auth.routes'
-import board from './routes/board.routes'
-import card from './routes/card.routes'
-import group from './routes/group.routes'
+import auth from './routes/auth'
+import board from './routes/board'
+import card from './routes/card'
+import group from './routes/group'
 
 import { connectToDb } from './databases/index'
 
