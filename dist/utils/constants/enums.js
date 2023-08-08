@@ -1,6 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PasswordChangeEnum = exports.MfaStatusEnum = exports.MfaEnum = exports.BaseStatusEnum = void 0;
+exports.PasswordChangeEnum = exports.MfaStatusEnum = exports.MfaEnum = exports.BaseStatusEnum = exports.MailOperations = void 0;
+var MailOperations;
+(function (MailOperations) {
+    MailOperations[MailOperations["Login"] = 0] = "Login";
+    MailOperations[MailOperations["ForgotPassword"] = 1] = "ForgotPassword";
+})(MailOperations = exports.MailOperations || (exports.MailOperations = {}));
 var BaseStatusEnum;
 (function (BaseStatusEnum) {
     BaseStatusEnum[BaseStatusEnum["Passive"] = 0] = "Passive";

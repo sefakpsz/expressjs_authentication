@@ -8,6 +8,7 @@ const payloadKey = Buffer.from(process.env.payloadKey, "hex");
 const payloadIv = Buffer.from(process.env.payloadIv, "hex");
 const encryptionAlgorithm = process.env.encryptionAlgorithm;
 const createToken = (userId) => {
+    console.log(userId);
     const cipherUserId = (0, crypto_1.createCipheriv)(encryptionAlgorithm, payloadKey, payloadIv);
     const encryptedUserId = cipherUserId.update(userId, "utf-8", "hex") + cipherUserId.final("hex");
     const cipherPayload = (0, crypto_1.createCipheriv)(encryptionAlgorithm, payloadKey, payloadIv);

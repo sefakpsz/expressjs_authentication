@@ -17,24 +17,23 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const error_middleware_1 = require("./middlewares/error.middleware");
 const auth_middleware_1 = __importDefault(require("./middlewares/auth.middleware"));
-const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
-const board_routes_1 = __importDefault(require("./routes/board.routes"));
-const card_routes_1 = __importDefault(require("./routes/card.routes"));
-const group_routes_1 = __importDefault(require("./routes/group.routes"));
+const auth_1 = __importDefault(require("./routes/auth"));
+const board_1 = __importDefault(require("./routes/board"));
+const card_1 = __importDefault(require("./routes/card"));
+const group_1 = __importDefault(require("./routes/group"));
 const index_1 = require("./databases/index");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
-app.use('/auth', auth_routes_1.default);
-app.use('/board', board_routes_1.default);
-app.use('/card', card_routes_1.default);
-app.use('/group', group_routes_1.default);
+app.use('/auth', auth_1.default);
+app.use('/board', board_1.default);
+app.use('/card', card_1.default);
+app.use('/group', group_1.default);
 app.use(error_middleware_1.validationError);
 app.use(error_middleware_1.unknownError);
 app.use(auth_middleware_1.default);
 app.listen(process.env.port, () => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, index_1.connectToDb)()
-        .then(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, index_1.connectToDb)().then(() => __awaiter(void 0, void 0, void 0, function* () {
         console.log(`http://127.0.0.1:${process.env.port || 1708} is listening...`);
     }));
 }));

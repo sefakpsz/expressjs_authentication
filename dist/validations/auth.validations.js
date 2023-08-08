@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ForgotPassword = exports.ChangePassword = exports.Login = exports.SendMfaCode = exports.SendEmailPass = exports.CheckMfas = exports.Register = exports.validator = void 0;
+exports.ForgotPassword = exports.ChangePassword = exports.Login = exports.SendMfaCode = exports.SendEmail = exports.CheckMfas = exports.Register = exports.validator = void 0;
 const express_joi_validation_1 = require("express-joi-validation");
 const joi_1 = __importDefault(require("joi"));
 exports.validator = (0, express_joi_validation_1.createValidator)({ passError: true });
@@ -22,8 +22,9 @@ exports.CheckMfas = joi_1.default.object({
     emailCode: joi_1.default.number(),
     googleCode: joi_1.default.number()
 });
-exports.SendEmailPass = joi_1.default.object({
-    email: joi_1.default.string().email().required()
+exports.SendEmail = joi_1.default.object({
+    email: joi_1.default.string().email().required(),
+    operation: joi_1.default.number().required()
 });
 exports.SendMfaCode = joi_1.default.object({
     code: joi_1.default.string().required()
@@ -33,11 +34,13 @@ exports.Login = joi_1.default.object({
     password: joi_1.default.string().required(),
 });
 exports.ChangePassword = joi_1.default.object({
+    emailCode: joi_1.default.number(),
+    googleCode: joi_1.default.number(),
     oldPassword: joi_1.default.string().required(),
     newPassword: joi_1.default.string().required(),
 });
 exports.ForgotPassword = joi_1.default.object({
-    distinctiveCode: joi_1.default.string().required(),
+    email: joi_1.default.string().email().required(),
     emailCode: joi_1.default.number(),
     googleCode: joi_1.default.number(),
     newPassword: joi_1.default.string().required()
