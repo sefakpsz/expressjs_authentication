@@ -1,6 +1,6 @@
 import express from 'express'
 import dotenv from 'dotenv'
-//asdasdas
+
 dotenv.config()
 
 import { validationError, unknownError } from './middlewares/error.middleware'
