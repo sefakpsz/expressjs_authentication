@@ -26,4 +26,4 @@ jobs:
     - run: npm i    
     - run: npm ci    
     - run: npm run build --if-present
-    - run: sudo pm2 restart api
+    - run: pm2 restart api
