@@ -23,6 +23,10 @@ app.use('/board', board)
 app.use('/card', card)
 app.use('/group', group)
 
+app.use('/sefa', (req, res, next) => {
+  return res.json(('hadi bakim'))
+})
+
 app.use(validationError)
 app.use(unknownError)
 app.use(authMiddleware)
