@@ -9,6 +9,6 @@ import {
   addingBoard,
   updatingBoard,
   getLists,
-} from '../controllers/board'
+} from '../controllers/board.controller'
 
 export default Router

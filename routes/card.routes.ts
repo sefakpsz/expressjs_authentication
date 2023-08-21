@@ -11,6 +11,6 @@ import {
   addingCard,
   deletingCard,
   updatingCard,
-} from '../controllers/card'
+} from '../controllers/card.controller'
 
 export default Router

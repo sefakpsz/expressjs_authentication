@@ -1,13 +1,30 @@
 import { Router, Request, Response, NextFunction } from 'express'
 
-import { login, logout, register, changePassword, forgotPassword, checkMfas, sendEmail } from '../controllers/auth'
+import {
+  login,
+  logout,
+  register,
+  changePassword,
+  forgotPassword,
+  checkMfas,
+  sendEmail,
+} from '../controllers/auth.controller'
 
-import { validator, Register, Login, ChangePassword, ForgotPassword, CheckMfas, SendEmail } from '../validations/auth.validations'
+import {
+  validator,
+  Register,
+  Login,
+  ChangePassword,
+  ForgotPassword,
+  CheckMfas,
+  SendEmail,
+} from '../validations/auth.validations'
 import authMiddleware from '../middlewares/auth.middleware'
 
 const router = Router()
 
-const catching = (fn: any) => (req: Request, res: Response, next: NextFunction) => Promise.resolve(fn(req, res, next)).catch(next)
+const catching = (fn: any) => (req: Request, res: Response, next: NextFunction) =>
+  Promise.resolve(fn(req, res, next)).catch(next)
 
 router.post('/register', validator.body(Register), catching(register))
 
