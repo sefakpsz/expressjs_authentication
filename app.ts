@@ -5,6 +5,7 @@ dotenv.config()
 
 import { validationError, unknownError } from './middlewares/error.middleware'
 import authMiddleware from './middlewares/auth.middleware'
+import swaggerDocs from './utils/helpers/swagger.helper'
 
 import auth from './routes/auth.routes'
 import board from './routes/board.routes'
@@ -23,9 +24,7 @@ app.use('/board', board)
 app.use('/card', card)
 app.use('/group', group)
 
-app.use('/sefa', (req, res, next) => {
-  return res.json(('hadi bakim'))
-})
+swaggerDocs(app, parseInt(process.env.port as string))
 
 app.use(validationError)
 app.use(unknownError)
@@ -36,29 +35,3 @@ app.listen(process.env.port, async () => {
     console.log(`http://127.0.0.1:${process.env.port || 1708} is listening...`)
   })
 })
-
-// Asymmetric Algorithm
-// const { publicKey, privateKey, } = generateKeyPairSync("rsa", {
-//   modulusLength: 2048,
-// })
-
-// const encryptedText = publicEncrypt({
-//   key: publicKey,
-//   padding: constants.RSA_PKCS1_OAEP_PADDING,//optional
-//   oaepHash: 'sha256'//optional
-// },
-//   Buffer.from("sefa")
-// )
-
-// const decryptedText = privateDecrypt(
-//   {
-//     key: privateKey,
-//     padding: constants.RSA_PKCS1_OAEP_PADDING,//optional
-//     oaepHash: 'sha256'//optional
-//   },
-//   encryptedText
-// )
-
-// console.log(encryptedText.toString('base64'))
-
-// console.log('decrypted text:', decryptedText.toString())
